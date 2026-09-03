@@ -71,7 +71,7 @@ describe('parseItineraryResponse', () => {
   })
 
   it('falls back to the given destination when the response omits it', () => {
-    const { destination, ...withoutDestination } = validItineraryJson
+    const { destination: _destination, ...withoutDestination } = validItineraryJson
     const result = parseItineraryResponse(JSON.stringify(withoutDestination), 'Fallback City')
     expect(result.destination).toBe('Fallback City')
   })
