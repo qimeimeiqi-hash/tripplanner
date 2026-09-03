@@ -31,7 +31,7 @@ export const PROVIDER_PRESETS: ProviderPreset[] = [
     label: 'Google Gemini (OpenAI-compatible)',
     baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai',
     flavor: 'openai-compatible',
-    defaultModel: 'gemini-2.0-flash',
+    defaultModel: 'gemini-3.6-flash',
   },
   {
     id: 'deepseek',
