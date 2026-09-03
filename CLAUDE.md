@@ -2,6 +2,14 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Tech stack
+
+React 19 + TypeScript, built and bundled by Vite. State/persistence via Zustand
+(`zustand/middleware persist`, backed by `localStorage`). i18n via `react-i18next`. Map via
+Leaflet/`react-leaflet` with OpenStreetMap tiles. PDF export via `jspdf` + `html2canvas`.
+Linting via `oxlint`. Tests via `vitest` + `jsdom`. CI/CD via GitHub Actions, hosted on GitHub
+Pages. No backend, no database, no server-side code anywhere in this repo.
+
 ## Commands
 
 ```bash
@@ -86,3 +94,18 @@ Vitest + jsdom, test files colocated as `*.test.ts` next to the source they cove
 in `beforeEach` via `useXStore.setState(initialState, true)` and clear `localStorage`. Mock
 `fetch` with `vi.stubGlobal('fetch', vi.fn())` and use `vi.useFakeTimers()` /
 `vi.advanceTimersByTimeAsync()` to test the retry backoff without real delays.
+
+**These rules are mandatory for every test written in this repo, not just suggestions:**
+- Every test must assert a concrete input against a concrete expected output. Never write a
+  vacuous assertion like `expect(true).toBe(true)`.
+- Never hardcode an expected value just to force a test to pass, and never add test-only
+  branches to production code (e.g. `if (testMode) { ... }`) to make a test pass artificially.
+- Write the test first and confirm it actually fails (red) before making it pass (green) —
+  don't write the implementation first and then a test that trivially confirms it. For a test
+  added against existing code, verify it isn't vacuous by temporarily breaking the
+  implementation and confirming the test fails, then revert (see this repo's git history for
+  examples of this mutation-check workflow).
+- Cover boundary values, exception paths, and error conditions — not just the happy path.
+- Name each test so its purpose is obvious without reading the test body.
+- If the expected behavior for a case is ambiguous, ask the user rather than guessing and
+  proceeding on an assumption.
