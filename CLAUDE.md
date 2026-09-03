@@ -2,6 +2,31 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## 需求（Requirements）
+
+**产品目标**：100% 零成本的旅行行程规划器，部署在 GitHub Pages。
+
+**核心输入**：出发地、目的地、预算（可选币种）、天数、交通方式、景点偏好。
+
+**核心输出**：包含重点景点、路线地图、每日行程、装备清单的详细行程手册。每次生成都必须包含 4
+个核心模块——交通路线（`transportPlan`）、预算明细（`budgetBreakdown`）、必吃美食
+（`mustEatFood`）、避坑提示（`pitfallWarnings`），缺一不可，由 prompt 要求 + 响应二次校验双重
+保证（见下方 Architecture 的 "Generation data flow"）。
+
+**用户背景与约束**：
+- 面向全球任意目的地规划，不是仅限中国大陆场景的工具；用户本人常驻日本，因此不能默认往中国大
+  陆专用服务（高德/百度地图、仅限中国的 AI 服务商等）去想，地图/AI 服务商/币种等地域相关默认值
+  要能覆盖全球使用场景。
+- 完全静态托管、零后端、零数据库，一切状态留在用户浏览器本地。
+- AI 能力由用户自带 API Key（BYO Key）实现，Key 只存本地浏览器，不经过任何服务器中转。
+- 界面与生成内容需支持中/日/英三语切换。
+- 生成结果需可网页内浏览，并支持一键导出 PDF。
+- 历史生成过的行程保存在浏览器本地，可查看/删除/清空。
+
+**工程规范**（用户明确要求，详见下方 Mandatory rules 与 Testing conventions）：命名必须用清晰
+英文、修改代码必须同步更新对应测试、严禁引入 Tech stack 之外的第三方依赖、测试必须验证真实行
+为且遵循先红后绿的工作流。
+
 ## Tech stack
 
 React 19 + TypeScript, built and bundled by Vite. State/persistence via Zustand
@@ -133,3 +158,36 @@ in `beforeEach` via `useXStore.setState(initialState, true)` and clear `localSto
 - Name each test so its purpose is obvious without reading the test body.
 - If the expected behavior for a case is ambiguous, ask the user rather than guessing and
   proceeding on an assumption.
+
+## 设计决策（Design decisions）
+
+关键设计取舍和选择的理由，便于理解"为什么不是另一种做法"，改动这些决策前先确认是否仍然成立：
+
+- **纯静态 + BYO Key，而非自建后端代理**：满足"100% 零成本"的硬约束——一旦引入后端/代理，就需
+  要付费的服务器或函数调用额度。代价是 API Key 会经浏览器直接发往第三方服务商，这个风险已经在
+  设置页面的文案里向用户明确告知，属于已知且接受的取舍。
+- **OpenAI 兼容接口为主 + Anthropic 原生适配器，而非为每个服务商单独写适配器**：绝大多数主流服
+  务商（OpenAI、OpenRouter、DeepSeek、Gemini）都提供 OpenAI 兼容层，一套代码可以适配所有，只有
+  Anthropic 原生接口格式不同，才需要第二套（见 `ApiFlavor`）。
+- **Leaflet + OpenStreetMap，而非高德/百度/Google Maps**：免费、无需 API Key、无使用量限制，且
+  能覆盖全球任意目的地——用户常驻日本、规划的是全球行程，不能锁定中国大陆专用地图服务。
+- **Zustand + `localStorage` persist，而非自建后端存储历史**：与"零后端"约束一致；代价是历史记
+  录只存在单一浏览器/设备上，换设备会丢失，这是已知取舍（见 README）。
+- **4 个核心模块用"prompt 要求 + 响应后二次校验"双重机制，而非只在 prompt 里要求**：AI 有可能
+  不严格遵循 prompt 指令而漏掉字段，仅靠 prompt 无法保证。所以 `parseItineraryResponse` 会二次
+  校验，缺失时直接拒绝该次生成并报错，而不是静默展示不完整的行程。
+- **三语通过 `react-i18next` + 用户手动切换，而非自动检测浏览器语言**：`i18next-browser-
+  languagedetector` 曾经装过但从未接线使用，后来被移除——语言完全由用户在设置里手动选择并持久
+  化，避免自动检测带来的意外切换。
+- **Vitest 而非 Jest**：项目已用 Vite 构建，Vitest 与 Vite 配置无缝集成，不需要额外的 transform
+  配置。
+
+## 待办任务清单（TODO）
+
+分阶段执行计划维护在 [`TODO.md`](./TODO.md)（Phase 1 核心逻辑 / Phase 2 前端可视化 / Phase 3
+自动化与发布），逐项勾选状态以那份文件为准，这里不重复维护，只列当前影响较大的未完成项：
+
+- [ ] 移动端窄屏（<480px）适配复查（表单、地图、每日行程卡片、预算表格是否溢出/换行）
+- [ ] 部署工作流（`deploy.yml`）里加测试门槛：`vite build` 之前先跑 `npm test`，不过就不部署
+- [ ] 为 `parseItineraryResponse` 补充更多真实服务商返回样本的回归测试
+- [ ] 常见错误（401/404 等）的提示可操作性改进，而不是只展示服务商原始 JSON 报错
