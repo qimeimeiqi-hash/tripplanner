@@ -10,6 +10,18 @@ Leaflet/`react-leaflet` with OpenStreetMap tiles. PDF export via `jspdf` + `html
 Linting via `oxlint`. Tests via `vitest` + `jsdom`. CI/CD via GitHub Actions, hosted on GitHub
 Pages. No backend, no database, no server-side code anywhere in this repo.
 
+## Mandatory rules
+
+- **Naming**: variable and function names must be clear, meaningful English — no pinyin,
+  transliterations, or cryptic abbreviations. (Conventional short names like `i` in a loop or
+  `err` in a catch are fine.)
+- **Keep tests in sync**: whenever a source file is modified, update its corresponding test
+  file (see Testing conventions below) in the same change. A behavior change with no
+  corresponding test update is incomplete work, not a follow-up.
+- **Do not introduce third-party dependencies outside the stack above** without the user's
+  explicit approval first. If a task seems to need a library beyond what's listed in Tech
+  stack, ask before adding it rather than pulling one in on your own judgment.
+
 ## Commands
 
 ```bash
