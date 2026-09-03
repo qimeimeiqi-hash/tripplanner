@@ -184,10 +184,16 @@ in `beforeEach` via `useXStore.setState(initialState, true)` and clear `localSto
 
 ## 待办任务清单（TODO）
 
-分阶段执行计划维护在 [`TODO.md`](./TODO.md)（Phase 1 核心逻辑 / Phase 2 前端可视化 / Phase 3
-自动化与发布），逐项勾选状态以那份文件为准，这里不重复维护，只列当前影响较大的未完成项：
+剩余工作拆分成 3 个独立的 GitHub Issue 跟踪，逐项勾选状态以 Issue 本身为准，不在本文件重复维护：
 
-- [ ] 移动端窄屏（<480px）适配复查（表单、地图、每日行程卡片、预算表格是否溢出/换行）
-- [ ] 部署工作流（`deploy.yml`）里加测试门槛：`vite build` 之前先跑 `npm test`，不过就不部署
-- [ ] 为 `parseItineraryResponse` 补充更多真实服务商返回样本的回归测试
-- [ ] 常见错误（401/404 等）的提示可操作性改进，而不是只展示服务商原始 JSON 报错
+1. **[#1 部署与协作流程强化](https://github.com/qimeimeiqi-hash/tripplanner/issues/1)**（原 Phase
+   3）：CI 测试门槛、PR 校验工作流、fork 说明、发布记录。**建议最先执行**——是保护后两个 Issue
+   改动质量的基础设施，改动范围小、风险低。
+2. **[#2 前端体验打磨](https://github.com/qimeimeiqi-hash/tripplanner/issues/2)**（原 Phase 2）：
+   移动端窄屏适配、加载态细化、错误提示可读性。**建议第二执行**——用户可见、与其余两个 Issue 相
+   互独立，收益直接。
+3. **[#3 核心逻辑加固](https://github.com/qimeimeiqi-hash/tripplanner/issues/3)**（原 Phase 1）：
+   基于真实响应样本的回归测试、预算合理性校验。**建议最后执行**——依赖实际使用中积累的真实失败
+   样本，天然节奏最慢，且预算校验阈值需要产品设计判断。
+
+三个 Issue 相互独立，以上顺序是按风险/收益给出的建议，不是强制依赖关系。
