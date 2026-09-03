@@ -12,6 +12,7 @@
 - [x] 设置状态管理（`src/store/settingsStore.ts`）：provider 预设切换、baseUrl/model/apiKey/language/currency 持久化到 localStorage
 - [x] 历史记录状态管理（`src/store/tripStore.ts`）：新增置顶、超过 50 条自动截断、按 id 删除、清空
 - [x] 单元测试覆盖以上 lib/ 与 store/ 逻辑，且每条关键断言都做过"改坏实现应变红"的验证（`npm test`）
+- [x] 强制校验并要求 4 个核心模块（交通路线 `transportPlan`、预算明细 `budgetBreakdown`、必吃美食 `mustEatFood`、避坑提示 `pitfallWarnings`）：prompt 显式要求 AI 必须输出非空数组，`parseItineraryResponse` 二次校验，缺失时抛出 `AI_RESPONSE_MISSING_CORE_SECTIONS` 并在 UI 提示具体缺了哪个模块而不是静默留空
 - [ ] 为 `parseItineraryResponse` 补充更多真实 AI 返回样本的回归测试（不同服务商实际返回格式的差异，比如是否带 `models/` 前缀、字段大小写等），随着实际使用中遇到的解析失败案例持续补充
 - [ ] 评估是否需要对 `budgetBreakdown` 金额做合理性校验（例如总和是否接近用户预算，超出阈值时给出提示而非静默展示）
 
@@ -20,7 +21,7 @@
 用户可见、需要在浏览器里人工验证效果的部分。
 
 - [x] 行程表单（`src/components/TripForm.tsx`）：出发地/目的地/预算/币种/天数/交通方式/偏好标签
-- [x] 行程展示（`src/components/ItineraryView.tsx`）：概览、重点景点、每日行程时间线、预算明细表、装备清单
+- [x] 行程展示（`src/components/ItineraryView.tsx`）：概览、重点景点、交通路线、每日行程时间线、预算明细表、必吃美食、避坑提示、装备清单（对旧版 localStorage 历史记录用 `?? []` 兜底，避免缺字段时崩溃）
 - [x] 路线地图（`src/components/MapView.tsx`）：Leaflet + OpenStreetMap，懒加载（`React.lazy`）避免拖慢首屏
 - [x] PDF 导出（`src/lib/pdfExport.ts`）：html2canvas + jsPDF，动态 `import()` 按需加载
 - [x] 设置面板（`src/components/SettingsPanel.tsx`）：provider 预设选择、baseUrl/model/apiKey 编辑

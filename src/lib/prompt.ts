@@ -7,11 +7,26 @@ const LANGUAGE_NAMES: Record<SupportedLanguage, string> = {
   en: 'English',
 }
 
+/**
+ * The 4 core modules every generated itinerary must include. Keys match the
+ * corresponding field name on `Itinerary`. Enforced both in the prompt sent
+ * to the model and by `parseItineraryResponse`'s post-parse validation.
+ */
+export const CORE_SECTION_KEYS = [
+  'transportPlan',
+  'budgetBreakdown',
+  'mustEatFood',
+  'pitfallWarnings',
+] as const
+
+export type CoreSectionKey = (typeof CORE_SECTION_KEYS)[number]
+
 const JSON_SCHEMA_HINT = `{
   "destination": string,
   "summary": string,               // 2-4 sentence trip overview
   "highlights": [{"name": string, "lat": number, "lng": number}],  // 4-8 must-see spots
   "route": [{"name": string, "lat": number, "lng": number}],       // ordered waypoints for the whole trip, including origin and destination
+  "transportPlan": [{"from": string, "to": string, "mode": string, "duration": string, "note": string}],  // REQUIRED, non-empty: every transport leg of the trip (origin -> destination, and between cities/regions visited), e.g. flight numbers/routes, train lines, transfer instructions
   "dailyPlans": [
     {
       "day": number,
@@ -28,7 +43,9 @@ const JSON_SCHEMA_HINT = `{
       "transportNote": string
     }
   ],
-  "budgetBreakdown": [{"category": string, "amount": number, "note": string}],
+  "budgetBreakdown": [{"category": string, "amount": number, "note": string}],  // REQUIRED, non-empty
+  "mustEatFood": [{"name": string, "description": string, "location": {"name": string, "lat": number, "lng": number}}],  // REQUIRED, non-empty: local specialties/dishes/restaurants the traveler must try at this destination
+  "pitfallWarnings": [string],      // REQUIRED, non-empty: common scams, tourist traps, safety hazards, or mistakes travelers should specifically avoid at this destination
   "equipment": [{"category": string, "items": [string]}],
   "tips": [string]
 }`
@@ -52,7 +69,12 @@ Requirements:
 3. "route" should be an ordered list of waypoints representing the overall trip geography (can reuse highlight coordinates), suitable for drawing a line on a map.
 4. "budgetBreakdown" categories should sum to approximately the given budget (transport, lodging, food, activities, misc.) in ${input.currency}.
 5. "equipment" should be a practical packing checklist grouped by category (clothing, electronics, documents, health, destination-specific gear), tailored to the destination's climate/season and the trip's activities.
-6. Respond with ONLY the JSON object, matching this shape:
+6. The response MUST include all 4 of these core sections, each a non-empty array — a response missing any of them, or with any of them empty, is invalid and will be rejected:
+   - "transportPlan": concrete transport legs covering the whole trip (how to get from ${input.origin} to ${input.destination} and between any cities/regions visited), using the "${input.transportMode}" mode where applicable.
+   - "budgetBreakdown": itemized budget covering the trip.
+   - "mustEatFood": specific local specialties/dishes/restaurants worth trying at the destination.
+   - "pitfallWarnings": specific common scams, tourist traps, or mistakes to avoid at this destination — not generic safety advice.
+7. Respond with ONLY the JSON object, matching this shape:
 
 ${JSON_SCHEMA_HINT}`
 
@@ -73,13 +95,24 @@ export function parseItineraryResponse(raw: string, fallbackDestination: string)
     throw new Error('AI_RESPONSE_SHAPE_INVALID')
   }
 
+  const missingCoreSections = CORE_SECTION_KEYS.filter((key) => {
+    const value = obj[key]
+    return !Array.isArray(value) || value.length === 0
+  })
+  if (missingCoreSections.length > 0) {
+    throw new Error(`AI_RESPONSE_MISSING_CORE_SECTIONS:${missingCoreSections.join(',')}`)
+  }
+
   return {
     destination: obj.destination || fallbackDestination,
     summary: obj.summary || '',
     highlights: Array.isArray(obj.highlights) ? obj.highlights : [],
     route: Array.isArray(obj.route) ? obj.route : [],
+    transportPlan: obj.transportPlan!,
     dailyPlans: obj.dailyPlans,
-    budgetBreakdown: Array.isArray(obj.budgetBreakdown) ? obj.budgetBreakdown : [],
+    budgetBreakdown: obj.budgetBreakdown!,
+    mustEatFood: obj.mustEatFood!,
+    pitfallWarnings: obj.pitfallWarnings!,
     equipment: Array.isArray(obj.equipment) ? obj.equipment : [],
     tips: Array.isArray(obj.tips) ? obj.tips : [],
   }

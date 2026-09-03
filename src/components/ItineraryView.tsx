@@ -51,6 +51,23 @@ export default function ItineraryView({ itinerary, input }: ItineraryViewProps) 
           </section>
         )}
 
+        {(itinerary.transportPlan ?? []).length > 0 && (
+          <section>
+            <h3>{t('itinerary.transportPlan')}</h3>
+            <ul className="transport-leg-list">
+              {(itinerary.transportPlan ?? []).map((leg, i) => (
+                <li key={i}>
+                  <strong>
+                    {leg.from} → {leg.to}
+                  </strong>{' '}
+                  <span className="transport-leg-mode">({leg.mode}{leg.duration ? `, ${leg.duration}` : ''})</span>
+                  {leg.note && <p>{leg.note}</p>}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
         <section>
           <h3>{t('itinerary.dailyPlan')}</h3>
           {itinerary.dailyPlans.map((plan) => (
@@ -102,6 +119,32 @@ export default function ItineraryView({ itinerary, input }: ItineraryViewProps) 
                 ))}
               </tbody>
             </table>
+          </section>
+        )}
+
+        {(itinerary.mustEatFood ?? []).length > 0 && (
+          <section>
+            <h3>{t('itinerary.mustEatFood')}</h3>
+            <div className="equipment-grid">
+              {(itinerary.mustEatFood ?? []).map((food, i) => (
+                <div className="equipment-card" key={i}>
+                  <h4>{food.name}</h4>
+                  <p>{food.description}</p>
+                  {food.location?.name && <span className="activity-loc">📍 {food.location.name}</span>}
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {(itinerary.pitfallWarnings ?? []).length > 0 && (
+          <section>
+            <h3>{t('itinerary.pitfallWarnings')}</h3>
+            <ul>
+              {(itinerary.pitfallWarnings ?? []).map((warning, i) => (
+                <li key={i}>{warning}</li>
+              ))}
+            </ul>
           </section>
         )}
 

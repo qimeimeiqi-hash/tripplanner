@@ -45,11 +45,14 @@
     "summary": "旅行概要",
     "highlights": "見どころ",
     "map": "ルートマップ",
+    "transportPlan": "交通ルート",
     "dailyPlan": "日程表",
     "day": "{{n}}日目",
     "meals": "食事の提案",
     "transportNote": "移動のヒント",
     "budgetBreakdown": "予算内訳",
+    "mustEatFood": "必食グルメ",
+    "pitfallWarnings": "注意点・トラブル回避",
     "equipment": "持ち物リスト",
     "tips": "旅のヒント",
     "exportPdf": "PDFを書き出す",
@@ -76,6 +79,7 @@
     "missingApiKey": "「設定」でAPIキーを入力してください",
     "requestFailed": "生成に失敗しました：{{message}}",
     "invalidResponse": "AIの応答を解析できませんでした。再試行するかモデルを変更してください",
-    "retrying": "サーバーが混み合っています。{{seconds}}秒後に自動再試行します（{{attempt}}/{{maxAttempts}}回目）…"
+    "retrying": "サーバーが混み合っています。{{seconds}}秒後に自動再試行します（{{attempt}}/{{maxAttempts}}回目）…",
+    "missingCoreSections": "AIが生成した行程に必須項目が不足しています：{{sections}}。再生成してください"
   }
 }

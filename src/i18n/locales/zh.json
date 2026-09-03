@@ -45,11 +45,14 @@
     "summary": "行程概览",
     "highlights": "重点景点",
     "map": "路线地图",
+    "transportPlan": "交通路线",
     "dailyPlan": "每日行程",
     "day": "第 {{n}} 天",
     "meals": "餐饮建议",
     "transportNote": "交通提示",
     "budgetBreakdown": "预算明细",
+    "mustEatFood": "必吃美食",
+    "pitfallWarnings": "避坑提示",
     "equipment": "装备清单",
     "tips": "实用小贴士",
     "exportPdf": "导出 PDF",
@@ -76,6 +79,7 @@
     "missingApiKey": "请先在「设置」中填写 API Key",
     "requestFailed": "生成失败：{{message}}",
     "invalidResponse": "AI 返回内容无法解析，请重试或更换模型",
-    "retrying": "服务暂时繁忙，{{seconds}} 秒后自动重试（第 {{attempt}}/{{maxAttempts}} 次）…"
+    "retrying": "服务暂时繁忙，{{seconds}} 秒后自动重试（第 {{attempt}}/{{maxAttempts}} 次）…",
+    "missingCoreSections": "AI 生成的行程缺少必需模块：{{sections}}，请重新生成"
   }
 }

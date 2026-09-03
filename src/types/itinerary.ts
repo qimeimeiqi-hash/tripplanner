@@ -48,13 +48,35 @@ export interface EquipmentCategory {
   items: string[]
 }
 
+export interface TransportLeg {
+  from: string
+  to: string
+  mode: string
+  duration?: string
+  note?: string
+}
+
+export interface FoodRecommendation {
+  name: string
+  description: string
+  location?: GeoPoint
+}
+
+/**
+ * The 4 core modules every generated itinerary must include, enforced by
+ * `buildPrompt`'s instructions and validated by `parseItineraryResponse`:
+ * transportPlan, budgetBreakdown, mustEatFood, pitfallWarnings.
+ */
 export interface Itinerary {
   destination: string
   summary: string
   highlights: GeoPoint[]
   route: GeoPoint[]
+  transportPlan: TransportLeg[]
   dailyPlans: DailyPlan[]
   budgetBreakdown: BudgetItem[]
+  mustEatFood: FoodRecommendation[]
+  pitfallWarnings: string[]
   equipment: EquipmentCategory[]
   tips?: string[]
 }

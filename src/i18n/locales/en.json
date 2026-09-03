@@ -45,11 +45,14 @@
     "summary": "Trip Overview",
     "highlights": "Highlights",
     "map": "Route Map",
+    "transportPlan": "Transport Plan",
     "dailyPlan": "Daily Plan",
     "day": "Day {{n}}",
     "meals": "Meal Suggestions",
     "transportNote": "Transport Notes",
     "budgetBreakdown": "Budget Breakdown",
+    "mustEatFood": "Must-Eat Food",
+    "pitfallWarnings": "Pitfalls to Avoid",
     "equipment": "Packing Checklist",
     "tips": "Travel Tips",
     "exportPdf": "Export PDF",
@@ -76,6 +79,7 @@
     "missingApiKey": "Please enter an API key in Settings first",
     "requestFailed": "Generation failed: {{message}}",
     "invalidResponse": "Could not parse the AI response. Try again or switch models.",
-    "retrying": "Server is busy, retrying automatically in {{seconds}}s (attempt {{attempt}}/{{maxAttempts}})…"
+    "retrying": "Server is busy, retrying automatically in {{seconds}}s (attempt {{attempt}}/{{maxAttempts}})…",
+    "missingCoreSections": "The generated itinerary is missing required sections: {{sections}}. Please regenerate."
   }
 }

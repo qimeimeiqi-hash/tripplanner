@@ -243,6 +243,33 @@
   border: 1px solid var(--border);
 }
 
+.transport-leg-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.transport-leg-list li {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 14px;
+}
+
+.transport-leg-mode {
+  color: var(--text);
+  font-size: 13px;
+}
+
+.transport-leg-list p {
+  margin: 4px 0 0;
+  color: var(--text);
+  font-size: 13px;
+}
+
 .day-card {
   border: 1px solid var(--border);
   border-radius: 10px;

@@ -71,12 +71,24 @@ Gemini's frequent free-tier 503 "model overloaded") up to 3 attempts with expone
 
 `TripForm` → `TripInput` → `buildPrompt()` (`src/lib/prompt.ts`) builds a system/user prompt
 pair that instructs the model to return one JSON object matching a fixed schema (destination,
-summary, highlights, route, dailyPlans, budgetBreakdown, equipment, tips) → `callAi()` → raw
-text → `parseItineraryResponse()` extracts JSON defensively (handles ```json fences, unlabeled
-fences, or JSON embedded in surrounding prose) and validates shape, throwing
-`AI_RESPONSE_NOT_JSON` or `AI_RESPONSE_SHAPE_INVALID` on failure → resulting `Itinerary` is
+summary, highlights, route, dailyPlans, equipment, tips, plus the 4 core sections below) →
+`callAi()` → raw text → `parseItineraryResponse()` extracts JSON defensively (handles ```json
+fences, unlabeled fences, or JSON embedded in surrounding prose), validates shape, and enforces
+the core sections, throwing `AI_RESPONSE_NOT_JSON`, `AI_RESPONSE_SHAPE_INVALID`, or
+`AI_RESPONSE_MISSING_CORE_SECTIONS:<key1>,<key2>,...` on failure → resulting `Itinerary` is
 rendered by `ItineraryView` and appended to `useTripStore`'s history (capped at 50 entries,
 newest first, persisted under `tripplanner-history`).
+
+**Every generated itinerary must include 4 core sections**, each a required non-empty array on
+`Itinerary` (`CORE_SECTION_KEYS` in `src/lib/prompt.ts` is the single source of truth for
+which): `transportPlan` (交通路线), `budgetBreakdown` (预算明细), `mustEatFood` (必吃美食), and
+`pitfallWarnings` (避坑提示). This is enforced twice — the prompt explicitly instructs the model
+that a response missing or emptying any of them is invalid, and `parseItineraryResponse`
+independently re-validates the actual response and rejects it (surfaced to the user as a
+translated error listing exactly which sections were missing) rather than silently defaulting
+to `[]` the way the other, non-core optional fields do. `ItineraryView` reads these 4 fields
+with a `?? []` fallback since trip records saved to `localStorage` history before this
+validation existed won't have them.
 
 ### i18n
 

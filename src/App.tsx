@@ -7,7 +7,7 @@ import LanguageSwitcher from './components/LanguageSwitcher'
 import SettingsPanel from './components/SettingsPanel'
 import TripForm from './components/TripForm'
 import { AiCallError, callAi } from './lib/aiClient'
-import { buildPrompt, parseItineraryResponse } from './lib/prompt'
+import { buildPrompt, parseItineraryResponse, type CoreSectionKey } from './lib/prompt'
 import { useSettingsStore } from './store/settingsStore'
 import { useTripStore } from './store/tripStore'
 import type { Itinerary, TripInput, TripRecord } from './types/itinerary'
@@ -72,6 +72,13 @@ function App() {
         (err.message === 'AI_RESPONSE_NOT_JSON' || err.message === 'AI_RESPONSE_SHAPE_INVALID')
       ) {
         setError(t('errors.invalidResponse'))
+      } else if (
+        err instanceof Error &&
+        err.message.startsWith('AI_RESPONSE_MISSING_CORE_SECTIONS:')
+      ) {
+        const missingKeys = err.message.split(':')[1].split(',') as CoreSectionKey[]
+        const sections = missingKeys.map((key) => t(`itinerary.${key}`)).join(', ')
+        setError(t('errors.missingCoreSections', { sections }))
       } else {
         const message = err instanceof Error ? err.message : String(err)
         setError(t('errors.requestFailed', { message }))
