@@ -24,6 +24,15 @@ npm run dev
 npm run build
 ```
 
+## 测试
+
+```bash
+npm test        # 单次运行
+npm run test:watch  # 监听模式
+```
+
+测试覆盖 `src/lib`（prompt 构建/解析、AI 调用与重试退避逻辑）和 `src/store`（settings/history 状态管理），使用 Vitest。
+
 ## 部署到 GitHub Pages
 
 1. 在 GitHub 上新建一个名为 `tripplanner` 的仓库，并把本项目推送上去（`main` 分支）。
