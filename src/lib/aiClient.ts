@@ -7,9 +7,14 @@ export interface AiCallParams {
   flavor: ApiFlavor
   systemPrompt: string
   userPrompt: string
+  onRetry?: (attempt: number, maxAttempts: number, delayMs: number) => void
 }
 
 export class AiCallError extends Error {}
+
+const TRANSIENT_STATUS_CODES = new Set([408, 429, 500, 502, 503, 504, 529])
+const MAX_ATTEMPTS = 3
+const BASE_DELAY_MS = 2000
 
 export async function callAi({
   baseUrl,
@@ -18,15 +23,46 @@ export async function callAi({
   flavor,
   systemPrompt,
   userPrompt,
+  onRetry,
 }: AiCallParams): Promise<string> {
   if (!apiKey) {
     throw new AiCallError('MISSING_API_KEY')
   }
 
-  if (flavor === 'anthropic') {
-    return callAnthropic({ baseUrl, apiKey, model, systemPrompt, userPrompt })
+  const doCall = () =>
+    flavor === 'anthropic'
+      ? callAnthropic({ baseUrl, apiKey, model, systemPrompt, userPrompt })
+      : callOpenAiCompatible({ baseUrl, apiKey, model, systemPrompt, userPrompt })
+
+  let lastError: unknown
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    try {
+      return await doCall()
+    } catch (err) {
+      lastError = err
+      const status = extractStatus(err)
+      const isLastAttempt = attempt === MAX_ATTEMPTS
+      if (!status || !TRANSIENT_STATUS_CODES.has(status) || isLastAttempt) {
+        throw err
+      }
+      const delayMs = BASE_DELAY_MS * 2 ** (attempt - 1)
+      onRetry?.(attempt, MAX_ATTEMPTS, delayMs)
+      await sleep(delayMs)
+    }
   }
-  return callOpenAiCompatible({ baseUrl, apiKey, model, systemPrompt, userPrompt })
+  throw lastError
+}
+
+function extractStatus(err: unknown): number | null {
+  if (err instanceof AiCallError) {
+    const match = err.message.match(/^HTTP_(\d+):/)
+    if (match) return Number(match[1])
+  }
+  return null
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 async function callOpenAiCompatible({
@@ -35,7 +71,7 @@ async function callOpenAiCompatible({
   model,
   systemPrompt,
   userPrompt,
-}: Omit<AiCallParams, 'flavor'>): Promise<string> {
+}: Omit<AiCallParams, 'flavor' | 'onRetry'>): Promise<string> {
   const url = `${baseUrl.replace(/\/$/, '')}/chat/completions`
   const res = await fetch(url, {
     method: 'POST',
@@ -72,7 +108,7 @@ async function callAnthropic({
   model,
   systemPrompt,
   userPrompt,
-}: Omit<AiCallParams, 'flavor'>): Promise<string> {
+}: Omit<AiCallParams, 'flavor' | 'onRetry'>): Promise<string> {
   const url = `${baseUrl.replace(/\/$/, '')}/messages`
   const res = await fetch(url, {
     method: 'POST',

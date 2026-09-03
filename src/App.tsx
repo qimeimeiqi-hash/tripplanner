@@ -18,6 +18,7 @@ function App() {
   const { t, i18n } = useTranslation()
   const [tab, setTab] = useState<Tab>('plan')
   const [isGenerating, setIsGenerating] = useState(false)
+  const [retryStatus, setRetryStatus] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<{ itinerary: Itinerary; input: TripInput } | null>(null)
 
@@ -37,6 +38,7 @@ function App() {
     }
 
     setIsGenerating(true)
+    setRetryStatus(null)
     try {
       const { systemPrompt, userPrompt } = buildPrompt(input, language)
       const raw = await callAi({
@@ -46,6 +48,11 @@ function App() {
         flavor: settings.flavor,
         systemPrompt,
         userPrompt,
+        onRetry: (attempt, maxAttempts, delayMs) => {
+          setRetryStatus(
+            t('errors.retrying', { attempt, maxAttempts, seconds: Math.round(delayMs / 1000) }),
+          )
+        },
       })
       const itinerary = parseItineraryResponse(raw, input.destination)
       setResult({ itinerary, input })
@@ -71,6 +78,7 @@ function App() {
       }
     } finally {
       setIsGenerating(false)
+      setRetryStatus(null)
     }
   }
 
@@ -117,6 +125,7 @@ function App() {
         {tab === 'plan' && (
           <>
             <TripForm onSubmit={handleGenerate} isGenerating={isGenerating} />
+            {retryStatus && <p className="retry-banner">{retryStatus}</p>}
             {error && <p className="error-banner">{error}</p>}
             {result && <ItineraryView itinerary={result.itinerary} input={result.input} />}
           </>

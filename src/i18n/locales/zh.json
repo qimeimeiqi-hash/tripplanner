@@ -75,6 +75,7 @@
   "errors": {
     "missingApiKey": "请先在「设置」中填写 API Key",
     "requestFailed": "生成失败：{{message}}",
-    "invalidResponse": "AI 返回内容无法解析，请重试或更换模型"
+    "invalidResponse": "AI 返回内容无法解析，请重试或更换模型",
+    "retrying": "服务暂时繁忙，{{seconds}} 秒后自动重试（第 {{attempt}}/{{maxAttempts}} 次）…"
   }
 }
