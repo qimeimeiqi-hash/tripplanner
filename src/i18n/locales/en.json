@@ -1,0 +1,80 @@
+{
+  "app": {
+    "title": "Trip Itinerary Planner",
+    "tagline": "Enter your origin, destination, and preferences — AI generates a detailed travel handbook"
+  },
+  "nav": {
+    "plan": "Plan a Trip",
+    "history": "History",
+    "settings": "Settings"
+  },
+  "form": {
+    "origin": "Origin",
+    "originPlaceholder": "e.g. Tokyo",
+    "destination": "Destination",
+    "destinationPlaceholder": "e.g. Paris",
+    "budget": "Budget",
+    "currency": "Currency",
+    "days": "Days",
+    "transportMode": "Transport Mode",
+    "preferences": "Preferences",
+    "submit": "Generate Itinerary",
+    "generating": "Generating…",
+    "transport": {
+      "flight": "Flight",
+      "train": "Train",
+      "car": "Car / Road Trip",
+      "bus": "Bus",
+      "ship": "Ship / Ferry",
+      "mixed": "Mixed"
+    },
+    "preferenceTags": {
+      "nature": "Nature & Scenery",
+      "history": "History & Culture",
+      "food": "Food",
+      "shopping": "Shopping",
+      "art": "Art & Exhibitions",
+      "nightlife": "Nightlife",
+      "family": "Family Friendly",
+      "adventure": "Outdoor & Adventure",
+      "relaxation": "Relaxation",
+      "photography": "Photography Spots"
+    }
+  },
+  "itinerary": {
+    "summary": "Trip Overview",
+    "highlights": "Highlights",
+    "map": "Route Map",
+    "dailyPlan": "Daily Plan",
+    "day": "Day {{n}}",
+    "meals": "Meal Suggestions",
+    "transportNote": "Transport Notes",
+    "budgetBreakdown": "Budget Breakdown",
+    "equipment": "Packing Checklist",
+    "tips": "Travel Tips",
+    "exportPdf": "Export PDF",
+    "saveToHistory": "Automatically saved to history",
+    "regenerate": "Regenerate"
+  },
+  "settings": {
+    "provider": "AI Provider",
+    "baseUrl": "Base URL",
+    "apiKey": "API Key",
+    "apiKeyHint": "Your key is stored only in this browser's localStorage, never uploaded anywhere, and sent directly from your browser to the provider you choose.",
+    "model": "Model Name",
+    "language": "Interface Language",
+    "save": "Saved automatically"
+  },
+  "history": {
+    "empty": "No itineraries generated yet",
+    "createdAt": "Created",
+    "view": "View",
+    "delete": "Delete",
+    "clearAll": "Clear All"
+  },
+  "errors": {
+    "missingApiKey": "Please enter an API key in Settings first",
+    "requestFailed": "Generation failed: {{message}}",
+    "invalidResponse": "Could not parse the AI response. Try again or switch models."
+  }
+}
