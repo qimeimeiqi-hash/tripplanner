@@ -131,6 +131,21 @@ strings, add the key to all three locale files, not just one.
 user actually clicks export. Keep new heavy dependencies (map libraries, PDF/image processing,
 etc.) behind a dynamic import the same way rather than adding them to the main bundle.
 
+PDF export renders one block at a time rather than one flattened full-page screenshot:
+`pdfLayout.ts`'s `collectPdfBlocks()` walks `ItineraryView`'s export container and returns each
+top-level `<h2>`/`<p>`/`<section>` as an atomic, non-splittable block — except the daily-plan
+section, which it splits into its heading plus one block per `.day-card`, so a multi-day trip can
+still break cleanly between days. `planPdfLayout()` (pure, unit-tested) then decides which page
+and Y offset each block lands at, moving a block to a fresh page rather than letting
+`pdf.addImage` cut it across a page boundary — a block taller than a full page (rare) is still
+sliced across pages as a fallback rather than dropping content, and a section heading won't be
+left orphaned alone at the bottom of a page. `pdfExport.ts` is the thin orchestration layer that
+calls `html2canvas` per block and draws them via `jsPDF` using that plan. Any element marked
+`data-pdf-exclude="true"` (used on the map `<section>`) is skipped from the export entirely — a
+live Leaflet map doesn't render meaningfully as a static `html2canvas` snapshot (missing tiles,
+misplaced route overlay, and none of it is interactive on paper anyway), so it's better left out
+than included broken.
+
 ### Deployment
 
 `.github/workflows/deploy.yml` builds and deploys `dist/` to GitHub Pages on every push to

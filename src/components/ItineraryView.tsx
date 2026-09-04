@@ -44,7 +44,7 @@ export default function ItineraryView({ itinerary, input }: ItineraryViewProps) 
         )}
 
         {(itinerary.route.length > 0 || itinerary.highlights.length > 0) && (
-          <section>
+          <section data-pdf-exclude="true">
             <h3>{t('itinerary.map')}</h3>
             <Suspense fallback={null}>
               <MapView route={itinerary.route} highlights={itinerary.highlights} />
