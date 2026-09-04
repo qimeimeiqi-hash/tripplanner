@@ -1,7 +1,7 @@
 {
   "app": {
-    "title": "Trip Itinerary Planner",
-    "tagline": "Enter your origin, destination, and preferences — AI generates a detailed travel handbook"
+    "title": "Wanderly",
+    "tagline": "Enter your origin, destination, and preferences, and this site creates a detailed travel handbook for you"
   },
   "nav": {
     "plan": "Plan a Trip",
@@ -18,10 +18,10 @@
     "destinationRegion": "Destination Country/Region (optional)",
     "destinationRegionPlaceholder": "e.g. France, not Texas",
     "budget": "Budget (optional)",
-    "budgetPlaceholder": "Leave blank to let the AI decide",
+    "budgetPlaceholder": "Auto-plan",
     "currency": "Currency",
     "days": "Days (optional)",
-    "daysPlaceholder": "Leave blank to let the AI decide",
+    "daysPlaceholder": "Auto-plan",
     "transportMode": "Transport Mode",
     "preferences": "Preferences",
     "submit": "Generate Itinerary",
@@ -46,6 +46,23 @@
       "relaxation": "Relaxation",
       "photography": "Photography Spots"
     }
+  },
+  "loading": {
+    "stages": [
+      "Planning the route…",
+      "Working out the budget…",
+      "Picking must-eat food…",
+      "Gathering pitfall warnings…",
+      "Polishing the daily plan…"
+    ],
+    "facts": [
+      "Tip: Photograph your ID documents before you leave and back them up to the cloud.",
+      "Tip: A one-day transit pass is often cheaper than buying single tickets in many cities.",
+      "Tip: Check local tipping customs ahead of time to avoid awkward moments.",
+      "Tip: Traveling on weekdays or off-season can noticeably cut your budget.",
+      "Tip: Bring an empty water bottle and fill it up after security.",
+      "Tip: Download offline maps in advance in case the connection is spotty."
+    ]
   },
   "itinerary": {
     "summary": "Trip Overview",

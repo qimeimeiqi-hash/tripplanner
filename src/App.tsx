@@ -106,7 +106,23 @@ function App() {
     <div className="app-shell">
       <header className="app-header">
         <div>
-          <h1>{t('app.title')}</h1>
+          <h1>
+            <svg
+              className="title-icon"
+              width="26"
+              height="26"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path
+                d="M12 21c-4-3-7-6.5-7-10.5A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 7 4.5C19 14.5 16 18 12 21Z"
+                fill="currentColor"
+              />
+              <path d="M12 21V10" stroke="var(--surface)" strokeWidth="1.4" strokeLinecap="round" />
+            </svg>
+            {t('app.title')}
+          </h1>
           <p className="tagline">{t('app.tagline')}</p>
         </div>
         <LanguageSwitcher />

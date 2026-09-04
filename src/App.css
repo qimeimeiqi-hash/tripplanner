@@ -16,6 +16,14 @@
 .app-header h1 {
   font-size: 28px;
   margin: 0 0 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.app-header h1 .title-icon {
+  flex-shrink: 0;
+  color: var(--accent);
 }
 
 .tagline {
@@ -65,6 +73,32 @@
   color: var(--accent);
   border-bottom-color: var(--accent);
   font-weight: 600;
+}
+
+.trip-form,
+.itinerary-export,
+.history-item {
+  position: relative;
+  overflow: hidden;
+}
+
+.trip-form::before,
+.itinerary-export::before,
+.history-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 7px;
+  background: var(--accent);
+  opacity: 0.75;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='7' viewBox='0 0 24 7'%3E%3Cpath d='M0 7 Q3 0 6 7 T12 7 T18 7 T24 7 Z'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='7' viewBox='0 0 24 7'%3E%3Cpath d='M0 7 Q3 0 6 7 T12 7 T18 7 T24 7 Z'/%3E%3C/svg%3E");
+  -webkit-mask-repeat: repeat-x;
+  mask-repeat: repeat-x;
+  -webkit-mask-size: 24px 7px;
+  mask-size: 24px 7px;
 }
 
 .trip-form {
@@ -141,8 +175,38 @@
   cursor: pointer;
 }
 
+.primary-btn::before {
+  content: '🌿';
+  display: inline-block;
+  margin-right: 6px;
+  transform-origin: bottom center;
+}
+
 .primary-btn:hover {
   background: var(--accent-hover);
+}
+
+.primary-btn:hover::before {
+  animation: leaf-wiggle 0.6s ease-in-out;
+}
+
+@keyframes leaf-wiggle {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-14deg);
+  }
+  75% {
+    transform: rotate(14deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .primary-btn:hover::before {
+    animation: none;
+  }
 }
 
 .primary-btn:disabled {
@@ -198,6 +262,37 @@
 @keyframes spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+.loading-leaf {
+  display: block;
+  margin: 0 auto;
+  animation: leaf-float 2.2s ease-in-out infinite;
+}
+
+@keyframes leaf-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-4deg);
+  }
+  50% {
+    transform: translateY(-6px) rotate(4deg);
+  }
+}
+
+.loading-fact {
+  font-size: 13px;
+  font-style: italic;
+  color: var(--text);
+  opacity: 0.85;
+  text-align: center;
+  margin: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-leaf {
+    animation: none;
   }
 }
 

@@ -1,7 +1,7 @@
 {
   "app": {
-    "title": "旅行行程规划器",
-    "tagline": "输入出发地、目的地和偏好，AI 为你生成详细行程手册"
+    "title": "漫旅",
+    "tagline": "输入出发地、目的地和偏好，本站为你生成详细行程手册"
   },
   "nav": {
     "plan": "生成行程",
@@ -18,10 +18,10 @@
     "destinationRegion": "目的地国家/地区（可选）",
     "destinationRegionPlaceholder": "例如：法国（而非美国得州）",
     "budget": "预算（可选）",
-    "budgetPlaceholder": "留空由 AI 自动规划",
+    "budgetPlaceholder": "自动规划",
     "currency": "币种",
     "days": "天数（可选）",
-    "daysPlaceholder": "留空由 AI 自动规划",
+    "daysPlaceholder": "自动规划",
     "transportMode": "交通方式",
     "preferences": "景点偏好",
     "submit": "生成行程",
@@ -46,6 +46,23 @@
       "relaxation": "休闲度假",
       "photography": "摄影打卡"
     }
+  },
+  "loading": {
+    "stages": [
+      "正在规划路线…",
+      "正在核算预算…",
+      "正在挑选必吃美食…",
+      "正在整理避坑提示…",
+      "正在完善每日行程…"
+    ],
+    "facts": [
+      "小贴士：出行前把证件拍照备份一份，存到云端更安心。",
+      "小贴士：很多城市的地铁一日票比单次购票更划算。",
+      "小贴士：出发前查一下当地小费习惯，能避免不少尴尬。",
+      "小贴士：错峰出行（工作日/淡季）通常能省下不少预算。",
+      "小贴士：随身带一个空水壶，过安检后再装水更方便。",
+      "小贴士：提前下载离线地图，网络不好时也能找到路。"
+    ]
   },
   "itinerary": {
     "summary": "行程概览",
