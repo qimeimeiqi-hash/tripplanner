@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import type { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
 import './App.css'
 import HistoryPanel from './components/HistoryPanel'
@@ -9,12 +10,44 @@ import SettingsPanel from './components/SettingsPanel'
 import TripForm from './components/TripForm'
 import { AiCallError, callAi } from './lib/aiClient'
 import { extractHttpStatus, getHttpErrorMessage } from './lib/errorMessages'
-import { buildPrompt, parseItineraryResponse, type CoreSectionKey } from './lib/prompt'
+import {
+  buildBudgetTrimInstruction,
+  buildPrompt,
+  buildTweakPrompt,
+  parseItineraryResponse,
+  type CoreSectionKey,
+} from './lib/prompt'
 import { useSettingsStore } from './store/settingsStore'
 import { useTripStore } from './store/tripStore'
 import type { Itinerary, TripInput, TripRecord } from './types/itinerary'
 
 type Tab = 'plan' | 'history' | 'settings'
+
+function describeAiError(err: unknown, t: TFunction): string {
+  if (err instanceof AiCallError && err.message === 'MISSING_API_KEY') {
+    return t('errors.missingApiKey')
+  }
+  if (
+    err instanceof Error &&
+    (err.message === 'AI_RESPONSE_NOT_JSON' || err.message === 'AI_RESPONSE_SHAPE_INVALID')
+  ) {
+    return t('errors.invalidResponse')
+  }
+  if (err instanceof Error && err.message.startsWith('AI_RESPONSE_MISSING_CORE_SECTIONS:')) {
+    const missingKeys = err.message.split(':')[1].split(',') as CoreSectionKey[]
+    const sections = missingKeys.map((key) => t(`itinerary.${key}`)).join(', ')
+    return t('errors.missingCoreSections', { sections })
+  }
+  if (err instanceof AiCallError) {
+    // Never show the provider's raw HTTP response body — map it to a readable,
+    // localized explanation plus a suggested next action instead.
+    const status = extractHttpStatus(err.message)
+    const { messageKey, actionKey } = getHttpErrorMessage(status)
+    return `${t(messageKey)} ${t(actionKey)}`
+  }
+  const message = err instanceof Error ? err.message : String(err)
+  return t('errors.requestFailed', { message })
+}
 
 function App() {
   const { t, i18n } = useTranslation()
@@ -22,11 +55,19 @@ function App() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [retryStatus, setRetryStatus] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [result, setResult] = useState<{ itinerary: Itinerary; input: TripInput } | null>(null)
+  const [result, setResult] = useState<{ itinerary: Itinerary; input: TripInput; id: string } | null>(
+    null,
+  )
+  const [isTweaking, setIsTweaking] = useState(false)
+  const [tweakRetryStatus, setTweakRetryStatus] = useState<string | null>(null)
+  const [tweakError, setTweakError] = useState<string | null>(null)
+  const [tweakLog, setTweakLog] = useState<string[]>([])
 
   const language = useSettingsStore((s) => s.language)
   const settings = useSettingsStore()
   const addTrip = useTripStore((s) => s.addTrip)
+  const updateTripItinerary = useTripStore((s) => s.updateTripItinerary)
+  const renameTrip = useTripStore((s) => s.renameTrip)
 
   useEffect(() => {
     i18n.changeLanguage(language)
@@ -57,48 +98,71 @@ function App() {
         },
       })
       const itinerary = parseItineraryResponse(raw, input.destination)
-      setResult({ itinerary, input })
+      const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+      setResult({ itinerary, input, id })
+      setTweakLog([])
 
-      const record: TripRecord = {
-        id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-        createdAt: Date.now(),
-        input,
-        itinerary,
-      }
+      const record: TripRecord = { id, createdAt: Date.now(), input, itinerary }
       addTrip(record)
     } catch (err) {
-      if (err instanceof AiCallError && err.message === 'MISSING_API_KEY') {
-        setError(t('errors.missingApiKey'))
-      } else if (
-        err instanceof Error &&
-        (err.message === 'AI_RESPONSE_NOT_JSON' || err.message === 'AI_RESPONSE_SHAPE_INVALID')
-      ) {
-        setError(t('errors.invalidResponse'))
-      } else if (
-        err instanceof Error &&
-        err.message.startsWith('AI_RESPONSE_MISSING_CORE_SECTIONS:')
-      ) {
-        const missingKeys = err.message.split(':')[1].split(',') as CoreSectionKey[]
-        const sections = missingKeys.map((key) => t(`itinerary.${key}`)).join(', ')
-        setError(t('errors.missingCoreSections', { sections }))
-      } else if (err instanceof AiCallError) {
-        // Never show the provider's raw HTTP response body — map it to a readable,
-        // localized explanation plus a suggested next action instead.
-        const status = extractHttpStatus(err.message)
-        const { messageKey, actionKey } = getHttpErrorMessage(status)
-        setError(`${t(messageKey)} ${t(actionKey)}`)
-      } else {
-        const message = err instanceof Error ? err.message : String(err)
-        setError(t('errors.requestFailed', { message }))
-      }
+      setError(describeAiError(err, t))
     } finally {
       setIsGenerating(false)
       setRetryStatus(null)
     }
   }
 
+  async function handleTweak(instruction: string) {
+    if (!result) return
+    setTweakError(null)
+    if (!settings.apiKey) {
+      setTweakError(t('errors.missingApiKey'))
+      return
+    }
+
+    setIsTweaking(true)
+    setTweakRetryStatus(null)
+    try {
+      const { systemPrompt, userPrompt } = buildTweakPrompt(
+        result.itinerary,
+        result.input,
+        instruction,
+        language,
+      )
+      const raw = await callAi({
+        baseUrl: settings.baseUrl,
+        apiKey: settings.apiKey,
+        model: settings.model,
+        flavor: settings.flavor,
+        systemPrompt,
+        userPrompt,
+        onRetry: (attempt, maxAttempts, delayMs) => {
+          setTweakRetryStatus(
+            t('errors.retrying', { attempt, maxAttempts, seconds: Math.round(delayMs / 1000) }),
+          )
+        },
+      })
+      const itinerary = parseItineraryResponse(raw, result.input.destination)
+      setResult({ itinerary, input: result.input, id: result.id })
+      updateTripItinerary(result.id, itinerary)
+      setTweakLog((prev) => [...prev, instruction])
+    } catch (err) {
+      setTweakError(describeAiError(err, t))
+    } finally {
+      setIsTweaking(false)
+      setTweakRetryStatus(null)
+    }
+  }
+
+  function handleAutoTrimBudget() {
+    if (!result?.input.budget) return
+    handleTweak(buildBudgetTrimInstruction(result.input.budget, result.input.currency, language))
+  }
+
   function handleViewHistory(trip: TripRecord) {
-    setResult({ itinerary: trip.itinerary, input: trip.input })
+    setResult({ itinerary: trip.itinerary, input: trip.input, id: trip.id })
+    setTweakLog([])
+    setTweakError(null)
     setTab('plan')
   }
 
@@ -158,10 +222,21 @@ function App() {
             <TripForm onSubmit={handleGenerate} isGenerating={isGenerating} />
             {isGenerating && <LoadingSkeleton retryStatus={retryStatus} />}
             {error && <p className="error-banner">{error}</p>}
-            {result && <ItineraryView itinerary={result.itinerary} input={result.input} />}
+            {result && (
+              <ItineraryView
+                itinerary={result.itinerary}
+                input={result.input}
+                onTweak={handleTweak}
+                onAutoTrimBudget={handleAutoTrimBudget}
+                isTweaking={isTweaking}
+                tweakRetryStatus={tweakRetryStatus}
+                tweakError={tweakError}
+                tweakLog={tweakLog}
+              />
+            )}
           </>
         )}
-        {tab === 'history' && <HistoryPanel onView={handleViewHistory} />}
+        {tab === 'history' && <HistoryPanel onView={handleViewHistory} onRename={renameTrip} />}
         {tab === 'settings' && <SettingsPanel />}
       </main>
     </div>

@@ -12,7 +12,16 @@ export async function exportElementToPdf(element: HTMLElement, filename: string)
 
   const blocks = collectPdfBlocks(element)
   const canvases = await Promise.all(
-    blocks.map((block) => html2canvas(block.el, { scale: 2, useCORS: true, backgroundColor: '#ffffff' })),
+    blocks.map((block) =>
+      html2canvas(block.el, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        // Interactive controls (e.g. the budget auto-trim button) that live inside an
+        // otherwise-exportable block shouldn't render into the static PDF.
+        ignoreElements: (el) => el.getAttribute('data-pdf-exclude') === 'true',
+      }),
+    ),
   )
 
   const pdf = new jsPDF('p', 'mm', 'a4')

@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import type { TripInput } from '../types/itinerary'
-import { buildPrompt, CORE_SECTION_KEYS, parseItineraryResponse } from './prompt'
+import type { Itinerary, TripInput } from '../types/itinerary'
+import {
+  buildBudgetTrimInstruction,
+  buildPrompt,
+  buildTweakPrompt,
+  CORE_SECTION_KEYS,
+  parseItineraryResponse,
+} from './prompt'
 
 const baseInput: TripInput = {
   origin: '东京',
@@ -10,6 +16,8 @@ const baseInput: TripInput = {
   days: 5,
   transportMode: 'flight',
   preferences: ['history', 'food'],
+  travelerCount: 2,
+  accessibilityNeeds: [],
 }
 
 const validItineraryJson = {
@@ -268,5 +276,77 @@ describe('buildPrompt', () => {
       const { userPrompt } = buildPrompt(baseInput, 'en')
       expect(userPrompt).toMatch(/not always unique|share the same name/i)
     })
+  })
+
+  describe('traveler count and accessibility needs', () => {
+    it('interpolates the traveler count into the prompt', () => {
+      const { userPrompt } = buildPrompt({ ...baseInput, travelerCount: 4 }, 'en')
+      expect(userPrompt).toMatch(/4 traveler/i)
+    })
+
+    it('mentions each selected accessibility need in the prompt', () => {
+      const { userPrompt } = buildPrompt(
+        { ...baseInput, accessibilityNeeds: ['elderly', 'children', 'wheelchair'] },
+        'en',
+      )
+      expect(userPrompt).toMatch(/elderly/i)
+      expect(userPrompt).toMatch(/child/i)
+      expect(userPrompt).toMatch(/wheelchair/i)
+    })
+
+    it('omits accessibility guidance cleanly when no needs are selected', () => {
+      const { userPrompt } = buildPrompt({ ...baseInput, accessibilityNeeds: [] }, 'en')
+      expect(userPrompt).not.toContain('undefined')
+    })
+  })
+})
+
+describe('buildTweakPrompt', () => {
+  const itinerary = validItineraryJson as unknown as Itinerary
+
+  it('embeds the current itinerary as JSON and the traveler instruction', () => {
+    const { userPrompt } = buildTweakPrompt(
+      itinerary,
+      baseInput,
+      'Swap day 1 lunch for something vegetarian',
+      'en',
+    )
+    expect(userPrompt).toContain('"destination":"巴黎"')
+    expect(userPrompt).toContain('Swap day 1 lunch for something vegetarian')
+  })
+
+  it('instructs the model to change only what was requested and keep the rest intact', () => {
+    const { userPrompt } = buildTweakPrompt(itinerary, baseInput, 'Remove the museum visit', 'en')
+    expect(userPrompt).toMatch(/only this|as close to the original/i)
+  })
+
+  it('still requires all 4 core sections, by name, in the response', () => {
+    const { userPrompt } = buildTweakPrompt(itinerary, baseInput, 'Add another day', 'en')
+    for (const key of CORE_SECTION_KEYS) {
+      expect(userPrompt).toContain(`"${key}"`)
+    }
+  })
+
+  it('instructs the model to write narrative content in the selected language', () => {
+    expect(buildTweakPrompt(itinerary, baseInput, 'x', 'ja').systemPrompt).toContain('Japanese')
+    expect(buildTweakPrompt(itinerary, baseInput, 'x', 'zh').systemPrompt).toContain('Simplified Chinese')
+  })
+})
+
+describe('buildBudgetTrimInstruction', () => {
+  it('includes the numeric budget and currency for each supported language', () => {
+    expect(buildBudgetTrimInstruction(150000, 'JPY', 'zh')).toContain('150000')
+    expect(buildBudgetTrimInstruction(150000, 'JPY', 'zh')).toContain('JPY')
+    expect(buildBudgetTrimInstruction(150000, 'JPY', 'ja')).toContain('150000')
+    expect(buildBudgetTrimInstruction(150000, 'JPY', 'en')).toContain('150000')
+  })
+
+  it('produces different wording per language', () => {
+    const zh = buildBudgetTrimInstruction(100000, 'JPY', 'zh')
+    const ja = buildBudgetTrimInstruction(100000, 'JPY', 'ja')
+    const en = buildBudgetTrimInstruction(100000, 'JPY', 'en')
+    expect(zh).not.toBe(ja)
+    expect(zh).not.toBe(en)
+    expect(ja).not.toBe(en)
   })
 })

@@ -6,6 +6,8 @@ export type TransportMode =
   | 'ship'
   | 'mixed'
 
+export type AccessibilityNeed = 'elderly' | 'children' | 'wheelchair'
+
 export interface TripInput {
   origin: string
   originRegion?: string
@@ -18,12 +20,26 @@ export interface TripInput {
   days?: number
   transportMode: TransportMode
   preferences: string[]
+  travelerCount: number
+  accessibilityNeeds: AccessibilityNeed[]
 }
 
 export interface GeoPoint {
   name: string
   lat: number
   lng: number
+}
+
+/**
+ * A must-see spot, with AI-estimated visitor details (opening hours, closed days, ticket price,
+ * official notes) that are best-effort and not sourced from a live/official database — always
+ * displayed with a disclaimer to verify against the venue's own information.
+ */
+export interface Highlight extends GeoPoint {
+  openingHours?: string
+  closedDays?: string
+  ticketPrice?: string
+  officialNote?: string
 }
 
 export interface Activity {
@@ -74,7 +90,7 @@ export interface FoodRecommendation {
 export interface Itinerary {
   destination: string
   summary: string
-  highlights: GeoPoint[]
+  highlights: Highlight[]
   route: GeoPoint[]
   transportPlan: TransportLeg[]
   dailyPlans: DailyPlan[]
@@ -90,4 +106,6 @@ export interface TripRecord {
   createdAt: number
   input: TripInput
   itinerary: Itinerary
+  /** User-given custom name; falls back to "origin → destination" in the UI when absent. */
+  name?: string
 }

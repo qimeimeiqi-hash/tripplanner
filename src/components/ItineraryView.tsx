@@ -1,4 +1,4 @@
-import { lazy, Suspense, useRef } from 'react'
+import { lazy, Suspense, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { isBudgetOverThreshold, sumBudgetBreakdown } from '../lib/budgetCheck'
 import { exportElementToPdf } from '../lib/pdfExport'
@@ -9,16 +9,44 @@ const MapView = lazy(() => import('./MapView'))
 interface ItineraryViewProps {
   itinerary: Itinerary
   input: TripInput
+  onTweak: (instruction: string) => void
+  onAutoTrimBudget: () => void
+  isTweaking: boolean
+  tweakRetryStatus: string | null
+  tweakError: string | null
+  tweakLog: string[]
 }
 
-export default function ItineraryView({ itinerary, input }: ItineraryViewProps) {
+export default function ItineraryView({
+  itinerary,
+  input,
+  onTweak,
+  onAutoTrimBudget,
+  isTweaking,
+  tweakRetryStatus,
+  tweakError,
+  tweakLog,
+}: ItineraryViewProps) {
   const { t } = useTranslation()
   const exportRef = useRef<HTMLDivElement>(null)
+  const [tweakInput, setTweakInput] = useState('')
 
   async function handleExport() {
     if (!exportRef.current) return
     await exportElementToPdf(exportRef.current, `${itinerary.destination}-itinerary.pdf`)
   }
+
+  function handleTweakSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    const instruction = tweakInput.trim()
+    if (!instruction) return
+    onTweak(instruction)
+    setTweakInput('')
+  }
+
+  const highlightsHaveDetails = itinerary.highlights.some(
+    (h) => h.openingHours || h.closedDays || h.ticketPrice || h.officialNote,
+  )
 
   return (
     <div className="itinerary-view">
@@ -35,11 +63,35 @@ export default function ItineraryView({ itinerary, input }: ItineraryViewProps) 
         {itinerary.highlights.length > 0 && (
           <section>
             <h3>{t('itinerary.highlights')}</h3>
-            <ul className="highlight-list">
+            {highlightsHaveDetails && (
+              <p className="info-disclaimer">{t('itinerary.highlightInfoDisclaimer')}</p>
+            )}
+            <div className="equipment-grid">
               {itinerary.highlights.map((h, i) => (
-                <li key={i}>{h.name}</li>
+                <div className="equipment-card" key={i}>
+                  <h4>{h.name}</h4>
+                  {h.openingHours && (
+                    <p className="highlight-detail">
+                      <strong>{t('itinerary.openingHours')}: </strong>
+                      {h.openingHours}
+                    </p>
+                  )}
+                  {h.closedDays && (
+                    <p className="highlight-detail">
+                      <strong>{t('itinerary.closedDays')}: </strong>
+                      {h.closedDays}
+                    </p>
+                  )}
+                  {h.ticketPrice && (
+                    <p className="highlight-detail">
+                      <strong>{t('itinerary.ticketPrice')}: </strong>
+                      {h.ticketPrice}
+                    </p>
+                  )}
+                  {h.officialNote && <p className="highlight-detail">{h.officialNote}</p>}
+                </div>
               ))}
-            </ul>
+            </div>
           </section>
         )}
 
@@ -109,13 +161,24 @@ export default function ItineraryView({ itinerary, input }: ItineraryViewProps) 
             <h3>{t('itinerary.budgetBreakdown')}</h3>
             {typeof input.budget === 'number' &&
               isBudgetOverThreshold(itinerary.budgetBreakdown, input.budget) && (
-                <p className="budget-warning">
-                  {t('itinerary.budgetOverWarning', {
-                    total: sumBudgetBreakdown(itinerary.budgetBreakdown).toLocaleString(),
-                    budget: input.budget.toLocaleString(),
-                    currency: input.currency,
-                  })}
-                </p>
+                <div className="budget-warning">
+                  <p>
+                    {t('itinerary.budgetOverWarning', {
+                      total: sumBudgetBreakdown(itinerary.budgetBreakdown).toLocaleString(),
+                      budget: input.budget.toLocaleString(),
+                      currency: input.currency,
+                    })}
+                  </p>
+                  <button
+                    type="button"
+                    className="secondary-btn"
+                    data-pdf-exclude="true"
+                    onClick={onAutoTrimBudget}
+                    disabled={isTweaking}
+                  >
+                    {t('itinerary.autoTrimBudget')}
+                  </button>
+                </div>
               )}
             <div className="table-scroll">
               <table className="budget-table">
@@ -189,6 +252,35 @@ export default function ItineraryView({ itinerary, input }: ItineraryViewProps) 
             </ul>
           </section>
         )}
+      </div>
+
+      <div className="tweak-box">
+        <h3>{t('itinerary.tweakTitle')}</h3>
+        {tweakLog.length > 0 && (
+          <ul className="tweak-log">
+            {tweakLog.map((entry, i) => (
+              <li key={i}>{entry}</li>
+            ))}
+          </ul>
+        )}
+        <form className="tweak-form" onSubmit={handleTweakSubmit}>
+          <input
+            value={tweakInput}
+            onChange={(e) => setTweakInput(e.target.value)}
+            placeholder={t('itinerary.tweakPlaceholder') ?? ''}
+            disabled={isTweaking}
+          />
+          <button type="submit" className="secondary-btn" disabled={isTweaking || !tweakInput.trim()}>
+            {t('itinerary.tweakSubmit')}
+          </button>
+        </form>
+        {isTweaking && (
+          <p className="tweak-status">
+            <span className="spinner" aria-hidden="true" />
+            {tweakRetryStatus ?? t('itinerary.tweaking')}
+          </p>
+        )}
+        {tweakError && <p className="error-banner">{tweakError}</p>}
       </div>
     </div>
   )

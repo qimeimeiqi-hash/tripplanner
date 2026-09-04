@@ -22,7 +22,14 @@
     "currency": "通貨",
     "days": "日数（任意）",
     "daysPlaceholder": "自動プランニング",
+    "travelerCount": "旅行人数",
     "transportMode": "移動手段",
+    "accessibilityNeeds": "特別な配慮（任意）",
+    "accessibility": {
+      "elderly": "高齢の同行者がいる",
+      "children": "子供連れ",
+      "wheelchair": "車椅子での移動に対応が必要"
+    },
     "preferences": "旅行の好み",
     "submit": "行程を作成",
     "generating": "生成中…",
@@ -67,6 +74,10 @@
   "itinerary": {
     "summary": "旅行概要",
     "highlights": "見どころ",
+    "highlightInfoDisclaimer": "営業時間・料金などの情報はAIによる推定です。参考程度にとどめ、必ず公式情報をご確認ください。",
+    "openingHours": "営業時間",
+    "closedDays": "定休日",
+    "ticketPrice": "参考料金",
     "map": "ルートマップ",
     "transportPlan": "交通ルート",
     "dailyPlan": "日程表",
@@ -75,13 +86,18 @@
     "transportNote": "移動のヒント",
     "budgetBreakdown": "予算内訳",
     "budgetOverWarning": "この内訳の合計は {{total}} {{currency}} で、予算の {{budget}} {{currency}} を20%以上超えています。項目を見直すか、再生成をお試しください。",
+    "autoTrimBudget": "自動で予算内に調整",
     "mustEatFood": "必食グルメ",
     "pitfallWarnings": "注意点・トラブル回避",
     "equipment": "持ち物リスト",
     "tips": "旅のヒント",
     "exportPdf": "PDFを書き出す",
     "saveToHistory": "履歴に自動保存されました",
-    "regenerate": "再生成"
+    "regenerate": "再生成",
+    "tweakTitle": "AIで微調整",
+    "tweakPlaceholder": "例：2日目の美術館を公園に変更して",
+    "tweakSubmit": "変更を適用",
+    "tweaking": "AIが変更を適用しています…"
   },
   "settings": {
     "provider": "AIプロバイダー",
@@ -96,6 +112,9 @@
     "empty": "まだプランがありません",
     "createdAt": "作成日時",
     "view": "表示",
+    "rename": "名前を変更",
+    "save": "保存",
+    "cancel": "キャンセル",
     "delete": "削除",
     "clearAll": "履歴を全て削除"
   },

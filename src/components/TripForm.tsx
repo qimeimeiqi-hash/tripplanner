@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { CURRENCIES, PREFERENCE_TAGS, TRANSPORT_MODES } from '../lib/options'
+import { ACCESSIBILITY_NEEDS, CURRENCIES, PREFERENCE_TAGS, TRANSPORT_MODES } from '../lib/options'
 import { useSettingsStore } from '../store/settingsStore'
-import type { TransportMode, TripInput } from '../types/itinerary'
+import type { AccessibilityNeed, TransportMode, TripInput } from '../types/itinerary'
 
 interface TripFormProps {
   onSubmit: (input: TripInput) => void
@@ -23,10 +23,18 @@ export default function TripForm({ onSubmit, isGenerating }: TripFormProps) {
   const [days, setDays] = useState('5')
   const [transportMode, setTransportMode] = useState<TransportMode>('flight')
   const [preferences, setPreferences] = useState<string[]>([])
+  const [travelerCount, setTravelerCount] = useState('2')
+  const [accessibilityNeeds, setAccessibilityNeeds] = useState<AccessibilityNeed[]>([])
 
   function togglePreference(tag: string) {
     setPreferences((prev) =>
       prev.includes(tag) ? prev.filter((p) => p !== tag) : [...prev, tag],
+    )
+  }
+
+  function toggleAccessibilityNeed(need: AccessibilityNeed) {
+    setAccessibilityNeeds((prev) =>
+      prev.includes(need) ? prev.filter((n) => n !== need) : [...prev, need],
     )
   }
 
@@ -51,6 +59,8 @@ export default function TripForm({ onSubmit, isGenerating }: TripFormProps) {
       days: days.trim() === '' ? undefined : Number(days),
       transportMode,
       preferences,
+      travelerCount: travelerCount.trim() === '' ? 1 : Number(travelerCount),
+      accessibilityNeeds,
     })
   }
 
@@ -128,6 +138,16 @@ export default function TripForm({ onSubmit, isGenerating }: TripFormProps) {
             placeholder={t('form.daysPlaceholder') ?? ''}
           />
         </label>
+        <label className="field">
+          <span>{t('form.travelerCount')}</span>
+          <input
+            type="number"
+            min={1}
+            max={20}
+            value={travelerCount}
+            onChange={(e) => handleNumberFieldChange(e.target.value, setTravelerCount)}
+          />
+        </label>
       </div>
 
       <div className="field">
@@ -141,6 +161,22 @@ export default function TripForm({ onSubmit, isGenerating }: TripFormProps) {
               onClick={() => setTransportMode(mode)}
             >
               {t(`form.transport.${mode}`)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="field">
+        <span>{t('form.accessibilityNeeds')}</span>
+        <div className="chip-group">
+          {ACCESSIBILITY_NEEDS.map((need) => (
+            <button
+              type="button"
+              key={need}
+              className={`chip ${accessibilityNeeds.includes(need) ? 'chip-active' : ''}`}
+              onClick={() => toggleAccessibilityNeed(need)}
+            >
+              {t(`form.accessibility.${need}`)}
             </button>
           ))}
         </div>

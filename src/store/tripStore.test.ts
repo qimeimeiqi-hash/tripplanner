@@ -14,6 +14,8 @@ function makeTrip(id: string, createdAt = Date.now()): TripRecord {
       days: 3,
       transportMode: 'flight',
       preferences: [],
+      travelerCount: 1,
+      accessibilityNeeds: [],
     },
     itinerary: {
       destination: '巴黎',
@@ -87,5 +89,53 @@ describe('useTripStore', () => {
     useTripStore.getState().clearHistory()
 
     expect(useTripStore.getState().history).toEqual([])
+  })
+
+  it('renameTrip sets the name on only the matching trip', () => {
+    useTripStore.getState().addTrip(makeTrip('a'))
+    useTripStore.getState().addTrip(makeTrip('b'))
+
+    useTripStore.getState().renameTrip('a', '巴黎散心之旅')
+
+    const { history } = useTripStore.getState()
+    expect(history.find((t) => t.id === 'a')?.name).toBe('巴黎散心之旅')
+    expect(history.find((t) => t.id === 'b')?.name).toBeUndefined()
+  })
+
+  it('renameTrip with an empty/whitespace-only name clears the custom name', () => {
+    useTripStore.getState().addTrip(makeTrip('a'))
+    useTripStore.getState().renameTrip('a', 'My Trip')
+
+    useTripStore.getState().renameTrip('a', '   ')
+
+    expect(useTripStore.getState().history.find((t) => t.id === 'a')?.name).toBeUndefined()
+  })
+
+  it('renameTrip with a non-existent id leaves history unchanged', () => {
+    useTripStore.getState().addTrip(makeTrip('only-trip'))
+    useTripStore.getState().renameTrip('does-not-exist', 'New Name')
+    expect(useTripStore.getState().history.find((t) => t.id === 'only-trip')?.name).toBeUndefined()
+  })
+
+  it('updateTripItinerary replaces only the matching trip\'s itinerary, leaving input/id/createdAt untouched', () => {
+    const original = makeTrip('a')
+    useTripStore.getState().addTrip(original)
+    const updatedItinerary = { ...original.itinerary, summary: 'Updated after a tweak' }
+
+    useTripStore.getState().updateTripItinerary('a', updatedItinerary)
+
+    const trip = useTripStore.getState().history.find((t) => t.id === 'a')
+    expect(trip?.itinerary.summary).toBe('Updated after a tweak')
+    expect(trip?.input).toEqual(original.input)
+    expect(trip?.createdAt).toBe(original.createdAt)
+  })
+
+  it('updateTripItinerary with a non-existent id leaves history unchanged', () => {
+    const original = makeTrip('only-trip')
+    useTripStore.getState().addTrip(original)
+
+    useTripStore.getState().updateTripItinerary('does-not-exist', { ...original.itinerary, summary: 'x' })
+
+    expect(useTripStore.getState().history.find((t) => t.id === 'only-trip')?.itinerary.summary).toBe('')
   })
 })

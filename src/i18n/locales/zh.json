@@ -22,7 +22,14 @@
     "currency": "币种",
     "days": "天数（可选）",
     "daysPlaceholder": "自动规划",
+    "travelerCount": "出行人数",
     "transportMode": "交通方式",
+    "accessibilityNeeds": "特殊需求（可选）",
+    "accessibility": {
+      "elderly": "有老人同行",
+      "children": "有小孩同行",
+      "wheelchair": "轮椅无障碍需求"
+    },
     "preferences": "景点偏好",
     "submit": "生成行程",
     "generating": "生成中…",
@@ -67,6 +74,10 @@
   "itinerary": {
     "summary": "行程概览",
     "highlights": "重点景点",
+    "highlightInfoDisclaimer": "以下开放时间/门票价格等信息由 AI 估算，仅供参考，请以官方信息为准。",
+    "openingHours": "开放时间",
+    "closedDays": "休息日",
+    "ticketPrice": "参考门票",
     "map": "路线地图",
     "transportPlan": "交通路线",
     "dailyPlan": "每日行程",
@@ -75,13 +86,18 @@
     "transportNote": "交通提示",
     "budgetBreakdown": "预算明细",
     "budgetOverWarning": "预算明细合计 {{total}} {{currency}}，比你设定的 {{budget}} {{currency}} 预算高出 20% 以上，建议精简部分项目或重新生成。",
+    "autoTrimBudget": "自动精简方案",
     "mustEatFood": "必吃美食",
     "pitfallWarnings": "避坑提示",
     "equipment": "装备清单",
     "tips": "实用小贴士",
     "exportPdf": "导出 PDF",
     "saveToHistory": "已自动保存到历史行程",
-    "regenerate": "重新生成"
+    "regenerate": "重新生成",
+    "tweakTitle": "AI 微调",
+    "tweakPlaceholder": "例如：把第 2 天的博物馆换成公园",
+    "tweakSubmit": "应用修改",
+    "tweaking": "AI 正在修改中…"
   },
   "settings": {
     "provider": "AI 服务商",
@@ -96,6 +112,9 @@
     "empty": "还没有生成过行程",
     "createdAt": "生成时间",
     "view": "查看",
+    "rename": "重命名",
+    "save": "保存",
+    "cancel": "取消",
     "delete": "删除",
     "clearAll": "清空历史"
   },

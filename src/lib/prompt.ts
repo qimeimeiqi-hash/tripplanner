@@ -1,10 +1,16 @@
 import type { SupportedLanguage } from '../store/settingsStore'
-import type { BudgetItem, Itinerary, TripInput } from '../types/itinerary'
+import type { AccessibilityNeed, BudgetItem, Itinerary, TripInput } from '../types/itinerary'
 
 const LANGUAGE_NAMES: Record<SupportedLanguage, string> = {
   zh: 'Simplified Chinese (简体中文)',
   ja: 'Japanese (日本語)',
   en: 'English',
+}
+
+const ACCESSIBILITY_DESCRIPTIONS: Record<AccessibilityNeed, string> = {
+  elderly: 'traveling with elderly member(s) — avoid excessive walking/stairs, prefer accessible transport and a relaxed pace',
+  children: 'traveling with children — favor family-friendly activities and pacing, avoid overly long or late outings',
+  wheelchair: 'wheelchair accessibility required — only include venues, transport, and routes that are wheelchair-accessible',
 }
 
 /**
@@ -24,7 +30,7 @@ export type CoreSectionKey = (typeof CORE_SECTION_KEYS)[number]
 const JSON_SCHEMA_HINT = `{
   "destination": string,
   "summary": string,               // 2-4 sentence trip overview
-  "highlights": [{"name": string, "lat": number, "lng": number}],  // 4-8 must-see spots
+  "highlights": [{"name": string, "lat": number, "lng": number, "openingHours": string, "closedDays": string, "ticketPrice": string, "officialNote": string}],  // 4-8 must-see spots; the last 4 fields are best-effort estimates and may be omitted if genuinely unknown — never invented with false confidence
   "route": [{"name": string, "lat": number, "lng": number}],       // ordered waypoints for the whole trip, including origin and destination
   "transportPlan": [{"from": string, "to": string, "mode": string, "duration": string, "note": string}],  // REQUIRED, non-empty: every transport leg of the trip (origin -> destination, and between cities/regions visited), e.g. flight numbers/routes, train lines, transfer instructions
   "dailyPlans": [
@@ -70,6 +76,11 @@ export function buildPrompt(input: TripInput, language: SupportedLanguage) {
     ? `Cover exactly ${input.days} day(s) in "dailyPlans"`
     : 'Cover a sensible number of days (typically 3-10, chosen based on the destination and trip style) in "dailyPlans"'
 
+  const accessibilityLine =
+    input.accessibilityNeeds.length > 0
+      ? input.accessibilityNeeds.map((need) => ACCESSIBILITY_DESCRIPTIONS[need]).join('; ')
+      : 'none specified'
+
   const systemPrompt = `You are an expert global travel planner. You produce detailed, practical, and geographically accurate travel itineraries. You always respond with a single valid JSON object matching the requested schema, with no markdown fences, no commentary, and no trailing text before or after the JSON. All latitude/longitude coordinates must be real and accurate for the named place. All narrative text fields (summary, titles, descriptions, notes, tips, equipment item names) must be written in ${langName}.`
 
   const userPrompt = `Plan a trip with the following constraints:
@@ -78,21 +89,58 @@ export function buildPrompt(input: TripInput, language: SupportedLanguage) {
 - Trip length: ${tripLengthLine}
 - Budget: ${budgetLine}
 - Primary transport mode: ${input.transportMode}
+- Traveler count: ${input.travelerCount} traveler(s)
+- Accessibility considerations: ${accessibilityLine}
 - Traveler preferences / interests: ${input.preferences.join(', ') || 'no strong preference, general sightseeing'}
 
 Requirements:
 1. ${dailyPlansRequirement}, each with a realistic schedule (morning/afternoon/evening) that respects travel time between locations.
 2. Place names are not always unique worldwide — many cities/places share the same name across different countries or regions. When a country/region is given above, or the name itself is ambiguous, use it to identify the correct real-world location, and make sure every coordinate and geographic detail reflects that specific place.
-3. "highlights" must be real, well-known points of interest at the destination relevant to the stated preferences.
+3. "highlights" must be real, well-known points of interest at the destination relevant to the stated preferences. Where genuinely known, include typical opening hours, closed day(s), a reference ticket price, and any useful official note for each — leave those fields out rather than guessing when unsure.
 4. "route" should be an ordered list of waypoints representing the overall trip geography (can reuse highlight coordinates), suitable for drawing a line on a map.
-5. "budgetBreakdown" categories should sum to a realistic total for this trip (transport, lodging, food, activities, misc.) in ${input.currency} — see the budget note above for unrealistic or unspecified budgets.
+5. "budgetBreakdown" categories should sum to a realistic total for this trip for all ${input.travelerCount} traveler(s) combined (transport, lodging, food, activities, misc.) in ${input.currency} — see the budget note above for unrealistic or unspecified budgets.
 6. "equipment" should be a practical packing checklist grouped by category (clothing, electronics, documents, health, destination-specific gear), tailored to the destination's climate/season and the trip's activities.
-7. The response MUST include all 4 of these core sections, each a non-empty array — a response missing any of them, or with any of them empty, is invalid and will be rejected:
+7. If any accessibility considerations were given above, respect them throughout — pacing, activity choice, and transport must accommodate them, and call out anything the traveler should specifically know (e.g. a venue that is not accessible) in "pitfallWarnings" or "tips".
+8. The response MUST include all 4 of these core sections, each a non-empty array — a response missing any of them, or with any of them empty, is invalid and will be rejected:
    - "transportPlan": concrete transport legs covering the whole trip (how to get from ${originLine} to ${destinationLine} and between any cities/regions visited), using the "${input.transportMode}" mode where applicable.
    - "budgetBreakdown": itemized budget covering the trip.
    - "mustEatFood": specific local specialties/dishes/restaurants worth trying at the destination.
    - "pitfallWarnings": specific common scams, tourist traps, or mistakes to avoid at this destination — not generic safety advice.
-8. Respond with ONLY the JSON object, matching this shape:
+9. Respond with ONLY the JSON object, matching this shape:
+
+${JSON_SCHEMA_HINT}`
+
+  return { systemPrompt, userPrompt }
+}
+
+/**
+ * Builds a follow-up prompt asking the model to apply one natural-language change to an
+ * already-generated itinerary (e.g. "swap day 2's museum for something outdoors", or a canned
+ * instruction to trim the budget) rather than starting over. Reuses the same schema and core
+ * section requirements as `buildPrompt` so the response can go through the same
+ * `parseItineraryResponse` validation.
+ */
+export function buildTweakPrompt(
+  itinerary: Itinerary,
+  input: TripInput,
+  instruction: string,
+  language: SupportedLanguage,
+) {
+  const langName = LANGUAGE_NAMES[language]
+
+  const systemPrompt = `You are an expert global travel planner helping a traveler refine an itinerary you already produced. You always respond with a single valid JSON object matching the requested schema, with no markdown fences, no commentary, and no trailing text before or after the JSON. All narrative text fields must be written in ${langName}.`
+
+  const userPrompt = `Here is the current itinerary as JSON:
+
+${JSON.stringify(itinerary)}
+
+The traveler has this request: "${instruction}"
+
+Apply only this requested change. Keep every other part of the itinerary (wording, activities, order, coordinates, budget items, etc.) as close to the original as reasonably possible — do not regenerate the whole plan from scratch. If the request concerns one specific day, only touch that day's content unless the change naturally affects others (e.g. removing a day shifts later day numbers). Currency for any budget figures is ${input.currency}.
+
+The response MUST still include all 4 of these core sections, each a non-empty array: "transportPlan", "budgetBreakdown", "mustEatFood", "pitfallWarnings".
+
+Respond with ONLY the complete, updated JSON object, matching this shape:
 
 ${JSON_SCHEMA_HINT}`
 
@@ -134,6 +182,24 @@ export function parseItineraryResponse(raw: string, fallbackDestination: string)
     equipment: Array.isArray(obj.equipment) ? obj.equipment : [],
     tips: Array.isArray(obj.tips) ? obj.tips : [],
   }
+}
+
+/**
+ * Canned instruction text for the "auto-trim to budget" button, in the app's active language —
+ * fed into `buildTweakPrompt` the same way a freeform user instruction would be.
+ */
+export function buildBudgetTrimInstruction(
+  budget: number,
+  currency: string,
+  language: SupportedLanguage,
+): string {
+  if (language === 'zh') {
+    return `请把这份行程的总花费严格控制在 ${budget} ${currency} 预算以内，可以更换更便宜的住宿、餐饮或活动，但尽量保留行程的整体主题和主要亮点。`
+  }
+  if (language === 'ja') {
+    return `この旅行プランの総費用を予算${budget}${currency}以内に厳密に収めてください。宿泊・食事・アクティビティをより安価なものに変更してもかまいませんが、全体のテーマと主要な見どころはできるだけ維持してください。`
+  }
+  return `Please adjust this itinerary so its total cost strictly fits within a budget of ${budget} ${currency}, by swapping in cheaper lodging, dining, or activities as needed, while keeping the overall theme and main highlights as intact as possible.`
 }
 
 /**

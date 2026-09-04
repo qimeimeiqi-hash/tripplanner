@@ -22,7 +22,14 @@
     "currency": "Currency",
     "days": "Days (optional)",
     "daysPlaceholder": "Auto-plan",
+    "travelerCount": "Traveler Count",
     "transportMode": "Transport Mode",
+    "accessibilityNeeds": "Accessibility Needs (optional)",
+    "accessibility": {
+      "elderly": "Traveling with elderly",
+      "children": "Traveling with children",
+      "wheelchair": "Wheelchair accessibility needed"
+    },
     "preferences": "Preferences",
     "submit": "Generate Itinerary",
     "generating": "Generating…",
@@ -67,6 +74,10 @@
   "itinerary": {
     "summary": "Trip Overview",
     "highlights": "Highlights",
+    "highlightInfoDisclaimer": "Opening hours, ticket prices, and similar details below are AI estimates for reference only — please verify against official sources.",
+    "openingHours": "Opening Hours",
+    "closedDays": "Closed Days",
+    "ticketPrice": "Reference Ticket Price",
     "map": "Route Map",
     "transportPlan": "Transport Plan",
     "dailyPlan": "Daily Plan",
@@ -75,13 +86,18 @@
     "transportNote": "Transport Notes",
     "budgetBreakdown": "Budget Breakdown",
     "budgetOverWarning": "This breakdown totals {{total}} {{currency}}, more than 20% over your {{budget}} {{currency}} budget. Consider trimming some categories or regenerating.",
+    "autoTrimBudget": "Auto-Trim to Budget",
     "mustEatFood": "Must-Eat Food",
     "pitfallWarnings": "Pitfalls to Avoid",
     "equipment": "Packing Checklist",
     "tips": "Travel Tips",
     "exportPdf": "Export PDF",
     "saveToHistory": "Automatically saved to history",
-    "regenerate": "Regenerate"
+    "regenerate": "Regenerate",
+    "tweakTitle": "AI Fine-Tune",
+    "tweakPlaceholder": "e.g. Swap day 2's museum for a park",
+    "tweakSubmit": "Apply Change",
+    "tweaking": "AI is applying the change…"
   },
   "settings": {
     "provider": "AI Provider",
@@ -96,6 +112,9 @@
     "empty": "No itineraries generated yet",
     "createdAt": "Created",
     "view": "View",
+    "rename": "Rename",
+    "save": "Save",
+    "cancel": "Cancel",
     "delete": "Delete",
     "clearAll": "Clear All"
   },

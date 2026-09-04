@@ -1,4 +1,4 @@
-import type { TransportMode } from '../types/itinerary'
+import type { AccessibilityNeed, TransportMode } from '../types/itinerary'
 
 export const CURRENCIES = [
   'JPY',
@@ -36,3 +36,5 @@ export const PREFERENCE_TAGS = [
   'relaxation',
   'photography',
 ]
+
+export const ACCESSIBILITY_NEEDS: AccessibilityNeed[] = ['elderly', 'children', 'wheelchair']

@@ -376,6 +376,28 @@
   padding: 10px 14px;
   font-size: 14px;
   margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.budget-warning p {
+  margin: 0;
+}
+
+.info-disclaimer {
+  font-size: 12px;
+  font-style: italic;
+  color: var(--text);
+  opacity: 0.75;
+  margin: -4px 0 10px;
+}
+
+.highlight-detail {
+  font-size: 13px;
+  margin: 4px 0 0;
 }
 
 .itinerary-view {
@@ -409,6 +431,63 @@
 
 .itinerary-export section {
   margin-bottom: 28px;
+}
+
+.tweak-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 20px;
+  box-shadow: var(--shadow);
+}
+
+.tweak-box h3 {
+  margin: 0 0 10px;
+  font-size: 16px;
+}
+
+.tweak-log {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tweak-log li {
+  font-size: 13px;
+  color: var(--text);
+  background: var(--accent-bg);
+  border-radius: 6px;
+  padding: 6px 10px;
+}
+
+.tweak-form {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.tweak-form input {
+  flex: 1;
+  min-width: 200px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 15px;
+  background: var(--bg);
+  color: var(--text-h);
+}
+
+.tweak-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text);
+  margin: 10px 0 0;
 }
 
 .itinerary-export h3 {
@@ -610,6 +689,11 @@
   background: var(--surface);
 }
 
+.history-item-main {
+  flex: 1;
+  min-width: 0;
+}
+
 .history-meta {
   font-size: 12px;
   color: var(--text);
@@ -619,6 +703,24 @@
 .history-item-actions {
   display: flex;
   gap: 8px;
+  flex-shrink: 0;
+}
+
+.history-rename-form {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.history-rename-form input {
+  flex: 1;
+  min-width: 160px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 14px;
+  background: var(--bg);
+  color: var(--text-h);
 }
 
 .empty-state {
