@@ -121,6 +121,35 @@ export default function ItineraryView({
           </section>
         )}
 
+        <div className="tweak-box" data-pdf-exclude="true">
+          <h3>{t('itinerary.tweakTitle')}</h3>
+          {tweakLog.length > 0 && (
+            <ul className="tweak-log">
+              {tweakLog.map((entry, i) => (
+                <li key={i}>{entry}</li>
+              ))}
+            </ul>
+          )}
+          <form className="tweak-form" onSubmit={handleTweakSubmit}>
+            <input
+              value={tweakInput}
+              onChange={(e) => setTweakInput(e.target.value)}
+              placeholder={t('itinerary.tweakPlaceholder') ?? ''}
+              disabled={isTweaking}
+            />
+            <button type="submit" className="secondary-btn" disabled={isTweaking || !tweakInput.trim()}>
+              {t('itinerary.tweakSubmit')}
+            </button>
+          </form>
+          {isTweaking && (
+            <p className="tweak-status">
+              <span className="spinner" aria-hidden="true" />
+              {tweakRetryStatus ?? t('itinerary.tweaking')}
+            </p>
+          )}
+          {tweakError && <p className="error-banner">{tweakError}</p>}
+        </div>
+
         <section>
           <h3>{t('itinerary.dailyPlan')}</h3>
           {itinerary.dailyPlans.map((plan) => (
@@ -169,15 +198,21 @@ export default function ItineraryView({
                       currency: input.currency,
                     })}
                   </p>
-                  <button
-                    type="button"
-                    className="secondary-btn"
-                    data-pdf-exclude="true"
-                    onClick={onAutoTrimBudget}
-                    disabled={isTweaking}
-                  >
-                    {t('itinerary.autoTrimBudget')}
-                  </button>
+                  {isTweaking ? (
+                    <span className="tweak-status" data-pdf-exclude="true">
+                      <span className="spinner" aria-hidden="true" />
+                      {tweakRetryStatus ?? t('itinerary.tweaking')}
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      className="secondary-btn"
+                      data-pdf-exclude="true"
+                      onClick={onAutoTrimBudget}
+                    >
+                      {t('itinerary.autoTrimBudget')}
+                    </button>
+                  )}
                 </div>
               )}
             <div className="table-scroll">
@@ -252,35 +287,6 @@ export default function ItineraryView({
             </ul>
           </section>
         )}
-      </div>
-
-      <div className="tweak-box">
-        <h3>{t('itinerary.tweakTitle')}</h3>
-        {tweakLog.length > 0 && (
-          <ul className="tweak-log">
-            {tweakLog.map((entry, i) => (
-              <li key={i}>{entry}</li>
-            ))}
-          </ul>
-        )}
-        <form className="tweak-form" onSubmit={handleTweakSubmit}>
-          <input
-            value={tweakInput}
-            onChange={(e) => setTweakInput(e.target.value)}
-            placeholder={t('itinerary.tweakPlaceholder') ?? ''}
-            disabled={isTweaking}
-          />
-          <button type="submit" className="secondary-btn" disabled={isTweaking || !tweakInput.trim()}>
-            {t('itinerary.tweakSubmit')}
-          </button>
-        </form>
-        {isTweaking && (
-          <p className="tweak-status">
-            <span className="spinner" aria-hidden="true" />
-            {tweakRetryStatus ?? t('itinerary.tweaking')}
-          </p>
-        )}
-        {tweakError && <p className="error-banner">{tweakError}</p>}
       </div>
     </div>
   )
