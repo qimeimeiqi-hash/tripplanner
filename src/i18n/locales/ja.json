@@ -51,6 +51,7 @@
     "meals": "食事の提案",
     "transportNote": "移動のヒント",
     "budgetBreakdown": "予算内訳",
+    "budgetOverWarning": "この内訳の合計は {{total}} {{currency}} で、予算の {{budget}} {{currency}} を20%以上超えています。項目を見直すか、再生成をお試しください。",
     "mustEatFood": "必食グルメ",
     "pitfallWarnings": "注意点・トラブル回避",
     "equipment": "持ち物リスト",

@@ -142,6 +142,55 @@ describe('parseItineraryResponse', () => {
       )
     })
   })
+
+  describe('known LLM JSON output quirks (not real captured samples — modeled on documented, common failure patterns)', () => {
+    it('parses a response containing trailing commas before closing braces and brackets', () => {
+      const raw = `{
+        "destination": "巴黎",
+        "transportPlan": [{"from": "东京", "to": "巴黎", "mode": "flight"},],
+        "dailyPlans": [{"day": 1, "title": "Arrival", "activities": [],},],
+        "budgetBreakdown": [{"category": "Flights", "amount": 100000},],
+        "mustEatFood": [{"name": "Croissant", "description": "x"},],
+        "pitfallWarnings": ["Beware of scams",],
+      }`
+      const result = parseItineraryResponse(raw, 'Fallback')
+      expect(result.destination).toBe('巴黎')
+      expect(result.dailyPlans).toHaveLength(1)
+      expect(result.transportPlan).toHaveLength(1)
+    })
+
+    it('unwraps a response nested under a single wrapper key, e.g. {"itinerary": {...}}', () => {
+      const wrapped = { itinerary: validItineraryJson }
+      const result = parseItineraryResponse(JSON.stringify(wrapped), 'Fallback')
+      expect(result.destination).toBe('巴黎')
+      expect(result.dailyPlans).toHaveLength(1)
+      expect(result.budgetBreakdown).toEqual(validItineraryJson.budgetBreakdown)
+    })
+
+    it('does not unwrap a single-key object whose inner value is not itinerary-shaped', () => {
+      const raw = JSON.stringify({ data: { foo: 'bar' } })
+      expect(() => parseItineraryResponse(raw, 'Paris')).toThrow('AI_RESPONSE_SHAPE_INVALID')
+    })
+
+    it('coerces a budgetBreakdown amount returned as a numeric string into a number', () => {
+      const withStringAmount = {
+        ...validItineraryJson,
+        budgetBreakdown: [{ category: 'Flights', amount: '100000', note: 'Round trip' }],
+      }
+      const result = parseItineraryResponse(JSON.stringify(withStringAmount), '巴黎')
+      expect(result.budgetBreakdown[0].amount).toBe(100000)
+      expect(typeof result.budgetBreakdown[0].amount).toBe('number')
+    })
+
+    it('falls back to 0 for a budgetBreakdown amount that cannot be parsed as a number', () => {
+      const withBadAmount = {
+        ...validItineraryJson,
+        budgetBreakdown: [{ category: 'Misc', amount: 'unknown', note: '' }],
+      }
+      const result = parseItineraryResponse(JSON.stringify(withBadAmount), '巴黎')
+      expect(result.budgetBreakdown[0].amount).toBe(0)
+    })
+  })
 })
 
 describe('buildPrompt', () => {

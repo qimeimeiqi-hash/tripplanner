@@ -1,5 +1,5 @@
 import type { SupportedLanguage } from '../store/settingsStore'
-import type { Itinerary, TripInput } from '../types/itinerary'
+import type { BudgetItem, Itinerary, TripInput } from '../types/itinerary'
 
 const LANGUAGE_NAMES: Record<SupportedLanguage, string> = {
   zh: 'Simplified Chinese (简体中文)',
@@ -90,7 +90,7 @@ export function parseItineraryResponse(raw: string, fallbackDestination: string)
     throw new Error('AI_RESPONSE_NOT_JSON')
   }
 
-  const obj = parsed as Partial<Itinerary>
+  const obj = unwrapSingleKeyWrapper(parsed) as Partial<Itinerary>
   if (!obj || typeof obj !== 'object' || !Array.isArray(obj.dailyPlans)) {
     throw new Error('AI_RESPONSE_SHAPE_INVALID')
   }
@@ -110,7 +110,7 @@ export function parseItineraryResponse(raw: string, fallbackDestination: string)
     route: Array.isArray(obj.route) ? obj.route : [],
     transportPlan: obj.transportPlan!,
     dailyPlans: obj.dailyPlans,
-    budgetBreakdown: obj.budgetBreakdown!,
+    budgetBreakdown: normalizeBudgetBreakdown(obj.budgetBreakdown!),
     mustEatFood: obj.mustEatFood!,
     pitfallWarnings: obj.pitfallWarnings!,
     equipment: Array.isArray(obj.equipment) ? obj.equipment : [],
@@ -118,15 +118,60 @@ export function parseItineraryResponse(raw: string, fallbackDestination: string)
   }
 }
 
+/**
+ * Some providers nest the itinerary under a single wrapper key (e.g.
+ * `{"itinerary": {...}}`) instead of returning it at the top level, despite
+ * the prompt asking for a top-level object. Unwrap that case so it doesn't
+ * get rejected as AI_RESPONSE_SHAPE_INVALID.
+ */
+function unwrapSingleKeyWrapper(value: unknown): unknown {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return value
+  const keys = Object.keys(value as Record<string, unknown>)
+  if (keys.length !== 1) return value
+  const inner = (value as Record<string, unknown>)[keys[0]]
+  if (
+    inner !== null &&
+    typeof inner === 'object' &&
+    !Array.isArray(inner) &&
+    Array.isArray((inner as Record<string, unknown>).dailyPlans)
+  ) {
+    return inner
+  }
+  return value
+}
+
+/**
+ * Some providers emit budgetBreakdown amounts as numeric strings (e.g.
+ * `"100000"`) instead of numbers. Coerce them so downstream sums/comparisons
+ * (e.g. the budget-overage check) work correctly; an unparseable amount
+ * falls back to 0 rather than propagating NaN.
+ */
+function normalizeBudgetBreakdown(items: BudgetItem[]): BudgetItem[] {
+  return items.map((item) => {
+    const amount = typeof item.amount === 'number' ? item.amount : Number(item.amount)
+    return { ...item, amount: Number.isFinite(amount) ? amount : 0 }
+  })
+}
+
 function extractJson(raw: string): string {
   const trimmed = raw.trim()
   const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i)
-  if (fenced) return fenced[1].trim()
+  if (fenced) return stripTrailingCommas(fenced[1].trim())
 
   const firstBrace = trimmed.indexOf('{')
   const lastBrace = trimmed.lastIndexOf('}')
   if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-    return trimmed.slice(firstBrace, lastBrace + 1)
+    return stripTrailingCommas(trimmed.slice(firstBrace, lastBrace + 1))
   }
-  return trimmed
+  return stripTrailingCommas(trimmed)
+}
+
+/**
+ * Some providers (smaller/local models especially) emit a trailing comma
+ * before a closing `}`/`]`, which is invalid per the JSON spec but a common
+ * real-world quirk. Strip it so JSON.parse doesn't reject an otherwise-valid
+ * response over it.
+ */
+function stripTrailingCommas(jsonText: string): string {
+  return jsonText.replace(/,(\s*[}\]])/g, '$1')
 }

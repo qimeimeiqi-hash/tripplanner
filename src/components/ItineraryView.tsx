@@ -1,5 +1,6 @@
 import { lazy, Suspense, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
+import { isBudgetOverThreshold, sumBudgetBreakdown } from '../lib/budgetCheck'
 import { exportElementToPdf } from '../lib/pdfExport'
 import type { Itinerary, TripInput } from '../types/itinerary'
 
@@ -106,6 +107,15 @@ export default function ItineraryView({ itinerary, input }: ItineraryViewProps) 
         {itinerary.budgetBreakdown.length > 0 && (
           <section>
             <h3>{t('itinerary.budgetBreakdown')}</h3>
+            {isBudgetOverThreshold(itinerary.budgetBreakdown, input.budget) && (
+              <p className="budget-warning">
+                {t('itinerary.budgetOverWarning', {
+                  total: sumBudgetBreakdown(itinerary.budgetBreakdown).toLocaleString(),
+                  budget: input.budget.toLocaleString(),
+                  currency: input.currency,
+                })}
+              </p>
+            )}
             <div className="table-scroll">
               <table className="budget-table">
                 <tbody>

@@ -51,6 +51,7 @@
     "meals": "餐饮建议",
     "transportNote": "交通提示",
     "budgetBreakdown": "预算明细",
+    "budgetOverWarning": "预算明细合计 {{total}} {{currency}}，比你设定的 {{budget}} {{currency}} 预算高出 20% 以上，建议精简部分项目或重新生成。",
     "mustEatFood": "必吃美食",
     "pitfallWarnings": "避坑提示",
     "equipment": "装备清单",

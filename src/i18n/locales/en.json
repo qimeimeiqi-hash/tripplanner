@@ -51,6 +51,7 @@
     "meals": "Meal Suggestions",
     "transportNote": "Transport Notes",
     "budgetBreakdown": "Budget Breakdown",
+    "budgetOverWarning": "This breakdown totals {{total}} {{currency}}, more than 20% over your {{budget}} {{currency}} budget. Consider trimming some categories or regenerating.",
     "mustEatFood": "Must-Eat Food",
     "pitfallWarnings": "Pitfalls to Avoid",
     "equipment": "Packing Checklist",
