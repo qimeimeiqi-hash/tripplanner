@@ -94,10 +94,10 @@
     "exportPdf": "PDFを書き出す",
     "saveToHistory": "履歴に自動保存されました",
     "regenerate": "再生成",
-    "tweakTitle": "AIで微調整",
+    "tweakTitle": "お好みに調整",
     "tweakPlaceholder": "例：2日目の美術館を公園に変更して",
     "tweakSubmit": "変更を適用",
-    "tweaking": "AIが変更を適用しています…"
+    "tweaking": "もうすぐです、少々お待ちください…"
   },
   "settings": {
     "provider": "AIプロバイダー",

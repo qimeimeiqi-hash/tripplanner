@@ -94,10 +94,10 @@
     "exportPdf": "Export PDF",
     "saveToHistory": "Automatically saved to history",
     "regenerate": "Regenerate",
-    "tweakTitle": "AI Fine-Tune",
+    "tweakTitle": "Adjust to Your Liking",
     "tweakPlaceholder": "e.g. Swap day 2's museum for a park",
     "tweakSubmit": "Apply Change",
-    "tweaking": "AI is applying the change…"
+    "tweaking": "Almost there, just a moment…"
   },
   "settings": {
     "provider": "AI Provider",

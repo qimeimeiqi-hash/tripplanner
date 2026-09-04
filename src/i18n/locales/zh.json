@@ -94,10 +94,10 @@
     "exportPdf": "导出 PDF",
     "saveToHistory": "已自动保存到历史行程",
     "regenerate": "重新生成",
-    "tweakTitle": "AI 微调",
+    "tweakTitle": "随心调整",
     "tweakPlaceholder": "例如：把第 2 天的博物馆换成公园",
     "tweakSubmit": "应用修改",
-    "tweaking": "AI 正在修改中…"
+    "tweaking": "马上就好，稍等一下…"
   },
   "settings": {
     "provider": "AI 服务商",
