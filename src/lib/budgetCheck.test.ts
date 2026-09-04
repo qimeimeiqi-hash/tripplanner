@@ -52,6 +52,10 @@ describe('isBudgetOverThreshold', () => {
     expect(isBudgetOverThreshold([], 100000)).toBe(false)
   })
 
+  it('returns false when the budget is not specified (the traveler left it blank)', () => {
+    expect(isBudgetOverThreshold(items(500000), undefined)).toBe(false)
+  })
+
   it('accepts a custom threshold overriding the default', () => {
     const budget = 100000
     expect(isBudgetOverThreshold(items(105000), budget, 0.02)).toBe(true)

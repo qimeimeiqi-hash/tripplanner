@@ -8,10 +8,14 @@ export type TransportMode =
 
 export interface TripInput {
   origin: string
+  originRegion?: string
   destination: string
-  budget: number
+  destinationRegion?: string
+  /** Omitted when the traveler leaves it blank — the AI then chooses a reasonable budget itself. */
+  budget?: number
   currency: string
-  days: number
+  /** Omitted when the traveler leaves it blank — the AI then chooses a sensible trip length itself. */
+  days?: number
   transportMode: TransportMode
   preferences: string[]
 }

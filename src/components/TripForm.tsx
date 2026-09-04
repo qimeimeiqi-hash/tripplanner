@@ -15,10 +15,12 @@ export default function TripForm({ onSubmit, isGenerating }: TripFormProps) {
   const setCurrency = useSettingsStore((s) => s.setCurrency)
 
   const [origin, setOrigin] = useState('')
+  const [originRegion, setOriginRegion] = useState('')
   const [destination, setDestination] = useState('')
-  const [budget, setBudget] = useState(200000)
+  const [destinationRegion, setDestinationRegion] = useState('')
+  const [budget, setBudget] = useState('200000')
   const [currency, setLocalCurrency] = useState(defaultCurrency)
-  const [days, setDays] = useState(5)
+  const [days, setDays] = useState('5')
   const [transportMode, setTransportMode] = useState<TransportMode>('flight')
   const [preferences, setPreferences] = useState<string[]>([])
 
@@ -28,16 +30,25 @@ export default function TripForm({ onSubmit, isGenerating }: TripFormProps) {
     )
   }
 
+  // Strips a leading zero as soon as another digit follows it (e.g. typing "5"
+  // after a lone "0" produced "05" otherwise) while still allowing the field
+  // to be cleared entirely — an empty value means "let the AI decide".
+  function handleNumberFieldChange(raw: string, setValue: (value: string) => void) {
+    setValue(raw.replace(/^0+(?=\d)/, ''))
+  }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!origin.trim() || !destination.trim()) return
     setCurrency(currency)
     onSubmit({
       origin: origin.trim(),
+      originRegion: originRegion.trim() || undefined,
       destination: destination.trim(),
-      budget,
+      destinationRegion: destinationRegion.trim() || undefined,
+      budget: budget.trim() === '' ? undefined : Number(budget),
       currency,
-      days,
+      days: days.trim() === '' ? undefined : Number(days),
       transportMode,
       preferences,
     })
@@ -68,12 +79,32 @@ export default function TripForm({ onSubmit, isGenerating }: TripFormProps) {
 
       <div className="field-row">
         <label className="field">
+          <span>{t('form.originRegion')}</span>
+          <input
+            value={originRegion}
+            onChange={(e) => setOriginRegion(e.target.value)}
+            placeholder={t('form.originRegionPlaceholder') ?? ''}
+          />
+        </label>
+        <label className="field">
+          <span>{t('form.destinationRegion')}</span>
+          <input
+            value={destinationRegion}
+            onChange={(e) => setDestinationRegion(e.target.value)}
+            placeholder={t('form.destinationRegionPlaceholder') ?? ''}
+          />
+        </label>
+      </div>
+
+      <div className="field-row">
+        <label className="field">
           <span>{t('form.budget')}</span>
           <input
             type="number"
             min={0}
             value={budget}
-            onChange={(e) => setBudget(Number(e.target.value))}
+            onChange={(e) => handleNumberFieldChange(e.target.value, setBudget)}
+            placeholder={t('form.budgetPlaceholder') ?? ''}
           />
         </label>
         <label className="field">
@@ -93,7 +124,8 @@ export default function TripForm({ onSubmit, isGenerating }: TripFormProps) {
             min={1}
             max={60}
             value={days}
-            onChange={(e) => setDays(Number(e.target.value))}
+            onChange={(e) => handleNumberFieldChange(e.target.value, setDays)}
+            placeholder={t('form.daysPlaceholder') ?? ''}
           />
         </label>
       </div>

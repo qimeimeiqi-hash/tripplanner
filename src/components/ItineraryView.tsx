@@ -107,15 +107,16 @@ export default function ItineraryView({ itinerary, input }: ItineraryViewProps) 
         {itinerary.budgetBreakdown.length > 0 && (
           <section>
             <h3>{t('itinerary.budgetBreakdown')}</h3>
-            {isBudgetOverThreshold(itinerary.budgetBreakdown, input.budget) && (
-              <p className="budget-warning">
-                {t('itinerary.budgetOverWarning', {
-                  total: sumBudgetBreakdown(itinerary.budgetBreakdown).toLocaleString(),
-                  budget: input.budget.toLocaleString(),
-                  currency: input.currency,
-                })}
-              </p>
-            )}
+            {typeof input.budget === 'number' &&
+              isBudgetOverThreshold(itinerary.budgetBreakdown, input.budget) && (
+                <p className="budget-warning">
+                  {t('itinerary.budgetOverWarning', {
+                    total: sumBudgetBreakdown(itinerary.budgetBreakdown).toLocaleString(),
+                    budget: input.budget.toLocaleString(),
+                    currency: input.currency,
+                  })}
+                </p>
+              )}
             <div className="table-scroll">
               <table className="budget-table">
                 <tbody>

@@ -15,10 +15,10 @@ export function sumBudgetBreakdown(items: BudgetItem[]): number {
 
 export function isBudgetOverThreshold(
   budgetBreakdown: BudgetItem[],
-  budget: number,
+  budget: number | undefined,
   threshold: number = BUDGET_OVERAGE_THRESHOLD,
 ): boolean {
-  if (budget <= 0 || budgetBreakdown.length === 0) return false
+  if (budget == null || budget <= 0 || budgetBreakdown.length === 0) return false
   const total = sumBudgetBreakdown(budgetBreakdown)
   return (total - budget) / budget > threshold
 }

@@ -53,28 +53,46 @@ const JSON_SCHEMA_HINT = `{
 export function buildPrompt(input: TripInput, language: SupportedLanguage) {
   const langName = LANGUAGE_NAMES[language]
 
+  const originLine = input.originRegion ? `${input.origin} (${input.originRegion})` : input.origin
+  const destinationLine = input.destinationRegion
+    ? `${input.destination} (${input.destinationRegion})`
+    : input.destination
+
+  const tripLengthLine = input.days
+    ? `${input.days} days (fixed)`
+    : 'not specified by the traveler — choose a sensible number of days for this destination and trip style (typically 3-10 days)'
+
+  const budgetLine = input.budget
+    ? `${input.budget} ${input.currency} (total, for the whole trip). If this is unrealistically low for a safe, reasonable version of this trip, do not distort the itinerary to artificially fit it — plan the most cost-effective realistic trip instead, even if its true cost exceeds this budget; any shortfall will be flagged separately to the traveler.`
+    : `not specified by the traveler — choose and clearly itemize a reasonable, realistic total budget for this kind of trip in ${input.currency}, based on the destination, trip length, and transport mode.`
+
+  const dailyPlansRequirement = input.days
+    ? `Cover exactly ${input.days} day(s) in "dailyPlans"`
+    : 'Cover a sensible number of days (typically 3-10, chosen based on the destination and trip style) in "dailyPlans"'
+
   const systemPrompt = `You are an expert global travel planner. You produce detailed, practical, and geographically accurate travel itineraries. You always respond with a single valid JSON object matching the requested schema, with no markdown fences, no commentary, and no trailing text before or after the JSON. All latitude/longitude coordinates must be real and accurate for the named place. All narrative text fields (summary, titles, descriptions, notes, tips, equipment item names) must be written in ${langName}.`
 
   const userPrompt = `Plan a trip with the following constraints:
-- Origin: ${input.origin}
-- Destination: ${input.destination}
-- Trip length: ${input.days} days
-- Budget: ${input.budget} ${input.currency} (total, for the whole trip)
+- Origin: ${originLine}
+- Destination: ${destinationLine}
+- Trip length: ${tripLengthLine}
+- Budget: ${budgetLine}
 - Primary transport mode: ${input.transportMode}
 - Traveler preferences / interests: ${input.preferences.join(', ') || 'no strong preference, general sightseeing'}
 
 Requirements:
-1. Cover exactly ${input.days} day(s) in "dailyPlans", each with a realistic schedule (morning/afternoon/evening) that respects travel time between locations.
-2. "highlights" must be real, well-known points of interest at the destination relevant to the stated preferences.
-3. "route" should be an ordered list of waypoints representing the overall trip geography (can reuse highlight coordinates), suitable for drawing a line on a map.
-4. "budgetBreakdown" categories should sum to approximately the given budget (transport, lodging, food, activities, misc.) in ${input.currency}.
-5. "equipment" should be a practical packing checklist grouped by category (clothing, electronics, documents, health, destination-specific gear), tailored to the destination's climate/season and the trip's activities.
-6. The response MUST include all 4 of these core sections, each a non-empty array — a response missing any of them, or with any of them empty, is invalid and will be rejected:
-   - "transportPlan": concrete transport legs covering the whole trip (how to get from ${input.origin} to ${input.destination} and between any cities/regions visited), using the "${input.transportMode}" mode where applicable.
+1. ${dailyPlansRequirement}, each with a realistic schedule (morning/afternoon/evening) that respects travel time between locations.
+2. Place names are not always unique worldwide — many cities/places share the same name across different countries or regions. When a country/region is given above, or the name itself is ambiguous, use it to identify the correct real-world location, and make sure every coordinate and geographic detail reflects that specific place.
+3. "highlights" must be real, well-known points of interest at the destination relevant to the stated preferences.
+4. "route" should be an ordered list of waypoints representing the overall trip geography (can reuse highlight coordinates), suitable for drawing a line on a map.
+5. "budgetBreakdown" categories should sum to a realistic total for this trip (transport, lodging, food, activities, misc.) in ${input.currency} — see the budget note above for unrealistic or unspecified budgets.
+6. "equipment" should be a practical packing checklist grouped by category (clothing, electronics, documents, health, destination-specific gear), tailored to the destination's climate/season and the trip's activities.
+7. The response MUST include all 4 of these core sections, each a non-empty array — a response missing any of them, or with any of them empty, is invalid and will be rejected:
+   - "transportPlan": concrete transport legs covering the whole trip (how to get from ${originLine} to ${destinationLine} and between any cities/regions visited), using the "${input.transportMode}" mode where applicable.
    - "budgetBreakdown": itemized budget covering the trip.
    - "mustEatFood": specific local specialties/dishes/restaurants worth trying at the destination.
    - "pitfallWarnings": specific common scams, tourist traps, or mistakes to avoid at this destination — not generic safety advice.
-7. Respond with ONLY the JSON object, matching this shape:
+8. Respond with ONLY the JSON object, matching this shape:
 
 ${JSON_SCHEMA_HINT}`
 

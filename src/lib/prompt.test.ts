@@ -227,4 +227,46 @@ describe('buildPrompt', () => {
     }
     expect(userPrompt).toMatch(/MUST include all 4 of these core sections/)
   })
+
+  describe('optional budget and days', () => {
+    it('lets the model choose a sensible number of days when days is omitted', () => {
+      const { days: _days, ...withoutDays } = baseInput
+      const { userPrompt } = buildPrompt(withoutDays, 'en')
+      expect(userPrompt).not.toContain('undefined')
+      expect(userPrompt).toMatch(/choose a sensible.*number of days/i)
+    })
+
+    it('lets the model choose a reasonable budget when budget is omitted', () => {
+      const { budget: _budget, ...withoutBudget } = baseInput
+      const { userPrompt } = buildPrompt(withoutBudget, 'en')
+      expect(userPrompt).not.toContain('undefined')
+      expect(userPrompt).toMatch(/choose.*(reasonable|realistic).*budget/i)
+    })
+
+    it('instructs the model not to distort the itinerary to artificially fit an unrealistically low budget', () => {
+      const { userPrompt } = buildPrompt(baseInput, 'en')
+      expect(userPrompt).toMatch(/do not distort the (itinerary|plan)/i)
+    })
+  })
+
+  describe('origin/destination region disambiguation', () => {
+    it('interpolates the given origin and destination regions into the prompt', () => {
+      const { userPrompt } = buildPrompt(
+        { ...baseInput, originRegion: '日本 东京都', destinationRegion: 'France, Île-de-France' },
+        'en',
+      )
+      expect(userPrompt).toContain('日本 东京都')
+      expect(userPrompt).toContain('France, Île-de-France')
+    })
+
+    it('omits region qualifiers cleanly when no region is given', () => {
+      const { userPrompt } = buildPrompt(baseInput, 'en')
+      expect(userPrompt).not.toContain('undefined')
+    })
+
+    it('always instructs the model that place names are not globally unique and to disambiguate using region context', () => {
+      const { userPrompt } = buildPrompt(baseInput, 'en')
+      expect(userPrompt).toMatch(/not always unique|share the same name/i)
+    })
+  })
 })
