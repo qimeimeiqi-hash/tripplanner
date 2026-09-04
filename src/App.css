@@ -245,8 +245,8 @@
 }
 
 .generation-banner-retry {
-  background: var(--danger-bg);
-  color: var(--danger);
+  background: var(--warning-bg);
+  color: var(--warning);
 }
 
 .spinner {
