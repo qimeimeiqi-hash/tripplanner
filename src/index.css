@@ -9,6 +9,8 @@
   --accent-bg: rgba(170, 59, 255, 0.08);
   --danger: #d1453b;
   --danger-bg: rgba(209, 69, 59, 0.08);
+  --warning: #a5690a;
+  --warning-bg: rgba(210, 140, 10, 0.1);
   --shadow: rgba(0, 0, 0, 0.08) 0 4px 16px -4px;
 
   --sans: system-ui, 'Segoe UI', 'Hiragino Sans', 'Noto Sans JP', 'PingFang SC', Roboto, sans-serif;
@@ -35,6 +37,8 @@
     --accent-bg: rgba(192, 132, 252, 0.14);
     --danger: #ff8a80;
     --danger-bg: rgba(255, 138, 128, 0.12);
+    --warning: #ffc266;
+    --warning-bg: rgba(255, 194, 102, 0.14);
     --shadow: rgba(0, 0, 0, 0.4) 0 4px 16px -4px;
   }
 }

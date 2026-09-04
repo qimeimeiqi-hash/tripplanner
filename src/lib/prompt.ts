@@ -1,5 +1,5 @@
 import type { SupportedLanguage } from '../store/settingsStore'
-import type { Itinerary, TripInput } from '../types/itinerary'
+import type { BudgetItem, Itinerary, TripInput } from '../types/itinerary'
 
 const LANGUAGE_NAMES: Record<SupportedLanguage, string> = {
   zh: 'Simplified Chinese (简体中文)',
@@ -53,28 +53,46 @@ const JSON_SCHEMA_HINT = `{
 export function buildPrompt(input: TripInput, language: SupportedLanguage) {
   const langName = LANGUAGE_NAMES[language]
 
+  const originLine = input.originRegion ? `${input.origin} (${input.originRegion})` : input.origin
+  const destinationLine = input.destinationRegion
+    ? `${input.destination} (${input.destinationRegion})`
+    : input.destination
+
+  const tripLengthLine = input.days
+    ? `${input.days} days (fixed)`
+    : 'not specified by the traveler — choose a sensible number of days for this destination and trip style (typically 3-10 days)'
+
+  const budgetLine = input.budget
+    ? `${input.budget} ${input.currency} (total, for the whole trip). If this is unrealistically low for a safe, reasonable version of this trip, do not distort the itinerary to artificially fit it — plan the most cost-effective realistic trip instead, even if its true cost exceeds this budget; any shortfall will be flagged separately to the traveler.`
+    : `not specified by the traveler — choose and clearly itemize a reasonable, realistic total budget for this kind of trip in ${input.currency}, based on the destination, trip length, and transport mode.`
+
+  const dailyPlansRequirement = input.days
+    ? `Cover exactly ${input.days} day(s) in "dailyPlans"`
+    : 'Cover a sensible number of days (typically 3-10, chosen based on the destination and trip style) in "dailyPlans"'
+
   const systemPrompt = `You are an expert global travel planner. You produce detailed, practical, and geographically accurate travel itineraries. You always respond with a single valid JSON object matching the requested schema, with no markdown fences, no commentary, and no trailing text before or after the JSON. All latitude/longitude coordinates must be real and accurate for the named place. All narrative text fields (summary, titles, descriptions, notes, tips, equipment item names) must be written in ${langName}.`
 
   const userPrompt = `Plan a trip with the following constraints:
-- Origin: ${input.origin}
-- Destination: ${input.destination}
-- Trip length: ${input.days} days
-- Budget: ${input.budget} ${input.currency} (total, for the whole trip)
+- Origin: ${originLine}
+- Destination: ${destinationLine}
+- Trip length: ${tripLengthLine}
+- Budget: ${budgetLine}
 - Primary transport mode: ${input.transportMode}
 - Traveler preferences / interests: ${input.preferences.join(', ') || 'no strong preference, general sightseeing'}
 
 Requirements:
-1. Cover exactly ${input.days} day(s) in "dailyPlans", each with a realistic schedule (morning/afternoon/evening) that respects travel time between locations.
-2. "highlights" must be real, well-known points of interest at the destination relevant to the stated preferences.
-3. "route" should be an ordered list of waypoints representing the overall trip geography (can reuse highlight coordinates), suitable for drawing a line on a map.
-4. "budgetBreakdown" categories should sum to approximately the given budget (transport, lodging, food, activities, misc.) in ${input.currency}.
-5. "equipment" should be a practical packing checklist grouped by category (clothing, electronics, documents, health, destination-specific gear), tailored to the destination's climate/season and the trip's activities.
-6. The response MUST include all 4 of these core sections, each a non-empty array — a response missing any of them, or with any of them empty, is invalid and will be rejected:
-   - "transportPlan": concrete transport legs covering the whole trip (how to get from ${input.origin} to ${input.destination} and between any cities/regions visited), using the "${input.transportMode}" mode where applicable.
+1. ${dailyPlansRequirement}, each with a realistic schedule (morning/afternoon/evening) that respects travel time between locations.
+2. Place names are not always unique worldwide — many cities/places share the same name across different countries or regions. When a country/region is given above, or the name itself is ambiguous, use it to identify the correct real-world location, and make sure every coordinate and geographic detail reflects that specific place.
+3. "highlights" must be real, well-known points of interest at the destination relevant to the stated preferences.
+4. "route" should be an ordered list of waypoints representing the overall trip geography (can reuse highlight coordinates), suitable for drawing a line on a map.
+5. "budgetBreakdown" categories should sum to a realistic total for this trip (transport, lodging, food, activities, misc.) in ${input.currency} — see the budget note above for unrealistic or unspecified budgets.
+6. "equipment" should be a practical packing checklist grouped by category (clothing, electronics, documents, health, destination-specific gear), tailored to the destination's climate/season and the trip's activities.
+7. The response MUST include all 4 of these core sections, each a non-empty array — a response missing any of them, or with any of them empty, is invalid and will be rejected:
+   - "transportPlan": concrete transport legs covering the whole trip (how to get from ${originLine} to ${destinationLine} and between any cities/regions visited), using the "${input.transportMode}" mode where applicable.
    - "budgetBreakdown": itemized budget covering the trip.
    - "mustEatFood": specific local specialties/dishes/restaurants worth trying at the destination.
    - "pitfallWarnings": specific common scams, tourist traps, or mistakes to avoid at this destination — not generic safety advice.
-7. Respond with ONLY the JSON object, matching this shape:
+8. Respond with ONLY the JSON object, matching this shape:
 
 ${JSON_SCHEMA_HINT}`
 
@@ -90,7 +108,7 @@ export function parseItineraryResponse(raw: string, fallbackDestination: string)
     throw new Error('AI_RESPONSE_NOT_JSON')
   }
 
-  const obj = parsed as Partial<Itinerary>
+  const obj = unwrapSingleKeyWrapper(parsed) as Partial<Itinerary>
   if (!obj || typeof obj !== 'object' || !Array.isArray(obj.dailyPlans)) {
     throw new Error('AI_RESPONSE_SHAPE_INVALID')
   }
@@ -110,7 +128,7 @@ export function parseItineraryResponse(raw: string, fallbackDestination: string)
     route: Array.isArray(obj.route) ? obj.route : [],
     transportPlan: obj.transportPlan!,
     dailyPlans: obj.dailyPlans,
-    budgetBreakdown: obj.budgetBreakdown!,
+    budgetBreakdown: normalizeBudgetBreakdown(obj.budgetBreakdown!),
     mustEatFood: obj.mustEatFood!,
     pitfallWarnings: obj.pitfallWarnings!,
     equipment: Array.isArray(obj.equipment) ? obj.equipment : [],
@@ -118,15 +136,60 @@ export function parseItineraryResponse(raw: string, fallbackDestination: string)
   }
 }
 
+/**
+ * Some providers nest the itinerary under a single wrapper key (e.g.
+ * `{"itinerary": {...}}`) instead of returning it at the top level, despite
+ * the prompt asking for a top-level object. Unwrap that case so it doesn't
+ * get rejected as AI_RESPONSE_SHAPE_INVALID.
+ */
+function unwrapSingleKeyWrapper(value: unknown): unknown {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return value
+  const keys = Object.keys(value as Record<string, unknown>)
+  if (keys.length !== 1) return value
+  const inner = (value as Record<string, unknown>)[keys[0]]
+  if (
+    inner !== null &&
+    typeof inner === 'object' &&
+    !Array.isArray(inner) &&
+    Array.isArray((inner as Record<string, unknown>).dailyPlans)
+  ) {
+    return inner
+  }
+  return value
+}
+
+/**
+ * Some providers emit budgetBreakdown amounts as numeric strings (e.g.
+ * `"100000"`) instead of numbers. Coerce them so downstream sums/comparisons
+ * (e.g. the budget-overage check) work correctly; an unparseable amount
+ * falls back to 0 rather than propagating NaN.
+ */
+function normalizeBudgetBreakdown(items: BudgetItem[]): BudgetItem[] {
+  return items.map((item) => {
+    const amount = typeof item.amount === 'number' ? item.amount : Number(item.amount)
+    return { ...item, amount: Number.isFinite(amount) ? amount : 0 }
+  })
+}
+
 function extractJson(raw: string): string {
   const trimmed = raw.trim()
   const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i)
-  if (fenced) return fenced[1].trim()
+  if (fenced) return stripTrailingCommas(fenced[1].trim())
 
   const firstBrace = trimmed.indexOf('{')
   const lastBrace = trimmed.lastIndexOf('}')
   if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-    return trimmed.slice(firstBrace, lastBrace + 1)
+    return stripTrailingCommas(trimmed.slice(firstBrace, lastBrace + 1))
   }
-  return trimmed
+  return stripTrailingCommas(trimmed)
+}
+
+/**
+ * Some providers (smaller/local models especially) emit a trailing comma
+ * before a closing `}`/`]`, which is invalid per the JSON spec but a common
+ * real-world quirk. Strip it so JSON.parse doesn't reject an otherwise-valid
+ * response over it.
+ */
+function stripTrailingCommas(jsonText: string): string {
+  return jsonText.replace(/,(\s*[}\]])/g, '$1')
 }
