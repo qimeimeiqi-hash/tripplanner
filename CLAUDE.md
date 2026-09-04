@@ -181,6 +181,17 @@ in `beforeEach` via `useXStore.setState(initialState, true)` and clear `localSto
   化，避免自动检测带来的意外切换。
 - **Vitest 而非 Jest**：项目已用 Vite 构建，Vitest 与 Vite 配置无缝集成，不需要额外的 transform
   配置。
+- **`parseItineraryResponse` 的兼容性回归测试基于已知 LLM JSON 输出问题模式构造，而非真实抓包样
+  本**：项目是纯前端 BYO Key 架构，没有服务端日志，无法获取用户实际使用中遇到的真实解析失败样
+  本。因此 `prompt.test.ts` 里"已知 LLM JSON 输出问题模式"这组测试（尾随逗号、单层 wrapper 包
+  裹如 `{"itinerary": {...}}`、budgetBreakdown 金额被写成数字字符串）是基于文档化的、有据可查的
+  常见 LLM 输出问题构造的，测试命名和注释里明确标注这一点，不冒充真实样本。等实际使用中真的遇
+  到解析失败，再用那次的真实响应补充回归测试（对应 Issue #3 的验收标准）。
+- **预算合理性校验：阈值 20%，且只在实际总额超出预算时提示**：`budgetCheck.ts` 的
+  `BUDGET_OVERAGE_THRESHOLD` 定为 0.2，`isBudgetOverThreshold` 只在
+  `(总额 - 预算) / 预算 > 20%` 时返回 true——远低于预算的情况不触发提示。这是产品判断而非技术限
+  制：超支是用户最关心、最需要被提醒的场景，远低于预算的提示价值较低且容易造成"提示疲劳"，改动
+  这个阈值或触发方向前先确认这个取舍是否仍然成立。
 
 ## 待办任务清单（TODO）
 
