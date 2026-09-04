@@ -64,9 +64,11 @@ Run tests matching a name: `npx vitest run -t "some test name substring"`
 ## Architecture
 
 This is a **100% static, zero-backend** trip itinerary planner deployed to GitHub Pages
-(`vite.config.ts` sets `base: '/tripplanner/'` to match the repo name — update this if the
-repo is ever renamed or forked). There is no server and no database; all state lives in the
-browser (`localStorage` via zustand's `persist` middleware).
+(`vite.config.ts` sets `base` to `/tripplanner/` to match the repo name when building for
+GitHub Pages — update the fallback if the repo is ever renamed or forked — but `/` when
+`process.env.VERCEL` is set, since Vercel serves the site at the domain root instead of under a
+project-site subpath; see Deployment below). There is no server and no database; all state
+lives in the browser (`localStorage` via zustand's `persist` middleware).
 
 ### AI is bring-your-own-key, called directly from the browser
 
@@ -135,6 +137,13 @@ etc.) behind a dynamic import the same way rather than adding them to the main b
 `main` (via `actions/upload-pages-artifact` + `actions/deploy-pages`). GitHub Pages must have
 its Source set to "GitHub Actions" in repo settings (already configured for this repo via `gh
 api repos/.../pages -f build_type=workflow`).
+
+The repo is also connected to Vercel, which builds and deploys independently on push (its own
+integration, not a step in `deploy.yml`). Vercel serves the site at its domain's root rather
+than under a `/tripplanner/` subpath, so `vite.config.ts` switches `base` to `/` whenever
+`process.env.VERCEL` is set — Vercel injects that variable into every build automatically, so
+no project-level configuration is needed for this to work. If asset requests 404 on a Vercel
+deployment, that base-path switch is the first thing to check.
 
 ### Testing conventions
 
