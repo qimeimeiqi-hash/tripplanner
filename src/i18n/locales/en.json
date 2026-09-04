@@ -124,6 +124,7 @@
     "invalidResponse": "Could not parse the AI response. Try again or switch models.",
     "retrying": "Server is busy, retrying automatically in {{seconds}}s (attempt {{attempt}}/{{maxAttempts}})…",
     "missingCoreSections": "The generated itinerary is missing required sections: {{sections}}. Please regenerate.",
+    "renderFailed": "Something in this response couldn't be displayed. Try regenerating, or switch to a different model.",
     "http": {
       "unauthorized": {
         "message": "Your API key is invalid or has expired.",

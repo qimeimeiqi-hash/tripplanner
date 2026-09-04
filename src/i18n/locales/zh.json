@@ -124,6 +124,7 @@
     "invalidResponse": "AI 返回内容无法解析，请重试或更换模型",
     "retrying": "服务暂时繁忙，{{seconds}} 秒后自动重试（第 {{attempt}}/{{maxAttempts}} 次）…",
     "missingCoreSections": "AI 生成的行程缺少必需模块：{{sections}}，请重新生成",
+    "renderFailed": "这次生成的内容格式有问题，暂时无法展示，请重新生成或换一个模型试试。",
     "http": {
       "unauthorized": {
         "message": "API Key 无效或已过期。",

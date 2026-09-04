@@ -156,6 +156,7 @@ export function parseItineraryResponse(raw: string, fallbackDestination: string)
     throw new Error('AI_RESPONSE_NOT_JSON')
   }
 
+  parsed = sanitizeMangledStrings(parsed)
   const obj = unwrapSingleKeyWrapper(parsed) as Partial<Itinerary>
   if (!obj || typeof obj !== 'object' || !Array.isArray(obj.dailyPlans)) {
     throw new Error('AI_RESPONSE_SHAPE_INVALID')
@@ -200,6 +201,35 @@ export function buildBudgetTrimInstruction(
     return `この旅行プランの総費用を予算${budget}${currency}以内に厳密に収めてください。宿泊・食事・アクティビティをより安価なものに変更してもかまいませんが、全体のテーマと主要な見どころはできるだけ維持してください。`
   }
   return `Please adjust this itinerary so its total cost strictly fits within a budget of ${budget} ${currency}, by swapping in cheaper lodging, dining, or activities as needed, while keeping the overall theme and main highlights as intact as possible.`
+}
+
+/**
+ * Some providers occasionally mangle a plain string field into a character-indexed object —
+ * `{"0": "a", "1": " ", "2": "b"}` instead of `"a b"` — most often for a shorter or simpler
+ * response. Left as-is, this crashes the whole page (React refuses to render a plain object as
+ * a child, and this app has no error boundary), so every value in the parsed response is walked
+ * recursively and any object shaped like this is reconstructed back into the string it should
+ * have been, before anything else touches the response.
+ */
+function sanitizeMangledStrings(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map((item) => sanitizeMangledStrings(item))
+  }
+  if (value === null || typeof value !== 'object') {
+    return value
+  }
+  const entries = Object.entries(value as Record<string, unknown>)
+  const isCharIndexed =
+    entries.length > 0 &&
+    entries.every(([key, v], i) => key === String(i) && typeof v === 'string')
+  if (isCharIndexed) {
+    return entries.map(([, v]) => v as string).join('')
+  }
+  const result: Record<string, unknown> = {}
+  for (const [key, v] of entries) {
+    result[key] = sanitizeMangledStrings(v)
+  }
+  return result
 }
 
 /**

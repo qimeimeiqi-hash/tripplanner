@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import type { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
 import './App.css'
+import ErrorBoundary from './components/ErrorBoundary'
 import HistoryPanel from './components/HistoryPanel'
 import ItineraryView from './components/ItineraryView'
 import LanguageSwitcher from './components/LanguageSwitcher'
@@ -223,16 +224,18 @@ function App() {
             {isGenerating && <LoadingSkeleton retryStatus={retryStatus} />}
             {error && <p className="error-banner">{error}</p>}
             {result && (
-              <ItineraryView
-                itinerary={result.itinerary}
-                input={result.input}
-                onTweak={handleTweak}
-                onAutoTrimBudget={handleAutoTrimBudget}
-                isTweaking={isTweaking}
-                tweakRetryStatus={tweakRetryStatus}
-                tweakError={tweakError}
-                tweakLog={tweakLog}
-              />
+              <ErrorBoundary key={result.id} fallbackMessage={t('errors.renderFailed')}>
+                <ItineraryView
+                  itinerary={result.itinerary}
+                  input={result.input}
+                  onTweak={handleTweak}
+                  onAutoTrimBudget={handleAutoTrimBudget}
+                  isTweaking={isTweaking}
+                  tweakRetryStatus={tweakRetryStatus}
+                  tweakError={tweakError}
+                  tweakLog={tweakLog}
+                />
+              </ErrorBoundary>
             )}
           </>
         )}

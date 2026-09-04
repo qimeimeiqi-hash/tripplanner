@@ -124,6 +124,7 @@
     "invalidResponse": "AIの応答を解析できませんでした。再試行するかモデルを変更してください",
     "retrying": "サーバーが混み合っています。{{seconds}}秒後に自動再試行します（{{attempt}}/{{maxAttempts}}回目）…",
     "missingCoreSections": "AIが生成した行程に必須項目が不足しています：{{sections}}。再生成してください",
+    "renderFailed": "生成された内容の形式に問題があり、表示できませんでした。もう一度生成するか、別のモデルをお試しください。",
     "http": {
       "unauthorized": {
         "message": "APIキーが無効か、期限切れです。",

@@ -198,6 +198,49 @@ describe('parseItineraryResponse', () => {
       const result = parseItineraryResponse(JSON.stringify(withBadAmount), '巴黎')
       expect(result.budgetBreakdown[0].amount).toBe(0)
     })
+
+    // Real crash observed in production: React error #31 ("Objects are not valid as a
+    // React child") from an object with sequential numeric keys 0..58. Some providers
+    // occasionally mangle a plain string field into a character-indexed object (i.e.
+    // {"0":"a","1":" ","2":"b",...} instead of "a b"), which crashes any component that
+    // renders that field directly, blanking the whole page since there's no error boundary.
+    function mangleStringIntoCharObject(text: string): Record<string, string> {
+      return Object.fromEntries(text.split('').map((char, i) => [String(i), char]))
+    }
+
+    it('reconstructs a top-level narrative field the model mangled into a character-indexed object', () => {
+      const withMangledSummary = {
+        ...validItineraryJson,
+        summary: mangleStringIntoCharObject('A short summary of the trip.'),
+      }
+      const result = parseItineraryResponse(JSON.stringify(withMangledSummary), '巴黎')
+      expect(result.summary).toBe('A short summary of the trip.')
+    })
+
+    it('reconstructs a mangled character-indexed object nested inside an array item (e.g. a budget note)', () => {
+      const withMangledNote = {
+        ...validItineraryJson,
+        budgetBreakdown: [
+          { category: 'Flights', amount: 100000, note: mangleStringIntoCharObject('Round trip tickets.') },
+        ],
+      }
+      const result = parseItineraryResponse(JSON.stringify(withMangledNote), '巴黎')
+      expect(result.budgetBreakdown[0].note).toBe('Round trip tickets.')
+    })
+
+    it('reconstructs a mangled character-indexed object that is itself an array item (e.g. a pitfall warning)', () => {
+      const withMangledWarning = {
+        ...validItineraryJson,
+        pitfallWarnings: [mangleStringIntoCharObject('Beware of scams near the station.')],
+      }
+      const result = parseItineraryResponse(JSON.stringify(withMangledWarning), '巴黎')
+      expect(result.pitfallWarnings[0]).toBe('Beware of scams near the station.')
+    })
+
+    it('does not mistake a legitimate small object (e.g. a GeoPoint) for a mangled string', () => {
+      const result = parseItineraryResponse(JSON.stringify(validItineraryJson), '巴黎')
+      expect(result.highlights[0]).toEqual(validItineraryJson.highlights[0])
+    })
   })
 })
 
