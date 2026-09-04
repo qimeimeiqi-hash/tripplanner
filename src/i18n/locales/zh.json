@@ -80,6 +80,32 @@
     "requestFailed": "生成失败：{{message}}",
     "invalidResponse": "AI 返回内容无法解析，请重试或更换模型",
     "retrying": "服务暂时繁忙，{{seconds}} 秒后自动重试（第 {{attempt}}/{{maxAttempts}} 次）…",
-    "missingCoreSections": "AI 生成的行程缺少必需模块：{{sections}}，请重新生成"
+    "missingCoreSections": "AI 生成的行程缺少必需模块：{{sections}}，请重新生成",
+    "http": {
+      "unauthorized": {
+        "message": "API Key 无效或已过期。",
+        "action": "请前往「设置」检查并更新你的 API Key。"
+      },
+      "forbidden": {
+        "message": "当前 API Key 没有权限访问所选的模型或接口。",
+        "action": "请确认该 Key 是否已开通此模型/服务的调用权限，或联系服务商核实账户状态。"
+      },
+      "notFound": {
+        "message": "请求的接口地址或模型不存在。",
+        "action": "请前往「设置」检查接口地址（Base URL）和模型名称是否填写正确。"
+      },
+      "rateLimited": {
+        "message": "请求过于频繁，已达到服务商的限流上限。",
+        "action": "请稍等片刻再重试，或前往服务商后台检查账户额度。"
+      },
+      "server": {
+        "message": "AI 服务商暂时出现故障。",
+        "action": "系统已自动重试，如仍然失败，请稍后再试或更换服务商/模型。"
+      },
+      "unknown": {
+        "message": "生成行程时出现未知错误。",
+        "action": "请重试；如果问题持续出现，请检查网络连接，或更换服务商/模型后再试。"
+      }
+    }
   }
 }

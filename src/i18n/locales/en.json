@@ -80,6 +80,32 @@
     "requestFailed": "Generation failed: {{message}}",
     "invalidResponse": "Could not parse the AI response. Try again or switch models.",
     "retrying": "Server is busy, retrying automatically in {{seconds}}s (attempt {{attempt}}/{{maxAttempts}})…",
-    "missingCoreSections": "The generated itinerary is missing required sections: {{sections}}. Please regenerate."
+    "missingCoreSections": "The generated itinerary is missing required sections: {{sections}}. Please regenerate.",
+    "http": {
+      "unauthorized": {
+        "message": "Your API key is invalid or has expired.",
+        "action": "Go to Settings and check or update your API key."
+      },
+      "forbidden": {
+        "message": "This API key doesn't have permission to access the selected model or endpoint.",
+        "action": "Confirm the key is authorized for this model/provider, or check your account status with the provider."
+      },
+      "notFound": {
+        "message": "The requested API endpoint or model could not be found.",
+        "action": "Go to Settings and check that the Base URL and model name are correct."
+      },
+      "rateLimited": {
+        "message": "Too many requests — you've hit the provider's rate limit.",
+        "action": "Wait a moment and try again, or check your account's usage quota."
+      },
+      "server": {
+        "message": "The AI provider is temporarily having issues.",
+        "action": "The app already retried automatically. If it keeps failing, try again later or switch providers/models."
+      },
+      "unknown": {
+        "message": "Something went wrong while generating your itinerary.",
+        "action": "Try again. If the problem persists, check your network connection or switch providers/models."
+      }
+    }
   }
 }

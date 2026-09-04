@@ -4,9 +4,11 @@ import './App.css'
 import HistoryPanel from './components/HistoryPanel'
 import ItineraryView from './components/ItineraryView'
 import LanguageSwitcher from './components/LanguageSwitcher'
+import LoadingSkeleton from './components/LoadingSkeleton'
 import SettingsPanel from './components/SettingsPanel'
 import TripForm from './components/TripForm'
 import { AiCallError, callAi } from './lib/aiClient'
+import { extractHttpStatus, getHttpErrorMessage } from './lib/errorMessages'
 import { buildPrompt, parseItineraryResponse, type CoreSectionKey } from './lib/prompt'
 import { useSettingsStore } from './store/settingsStore'
 import { useTripStore } from './store/tripStore'
@@ -79,6 +81,12 @@ function App() {
         const missingKeys = err.message.split(':')[1].split(',') as CoreSectionKey[]
         const sections = missingKeys.map((key) => t(`itinerary.${key}`)).join(', ')
         setError(t('errors.missingCoreSections', { sections }))
+      } else if (err instanceof AiCallError) {
+        // Never show the provider's raw HTTP response body — map it to a readable,
+        // localized explanation plus a suggested next action instead.
+        const status = extractHttpStatus(err.message)
+        const { messageKey, actionKey } = getHttpErrorMessage(status)
+        setError(`${t(messageKey)} ${t(actionKey)}`)
       } else {
         const message = err instanceof Error ? err.message : String(err)
         setError(t('errors.requestFailed', { message }))
@@ -132,7 +140,7 @@ function App() {
         {tab === 'plan' && (
           <>
             <TripForm onSubmit={handleGenerate} isGenerating={isGenerating} />
-            {retryStatus && <p className="retry-banner">{retryStatus}</p>}
+            {isGenerating && <LoadingSkeleton retryStatus={retryStatus} />}
             {error && <p className="error-banner">{error}</p>}
             {result && <ItineraryView itinerary={result.itinerary} input={result.input} />}
           </>

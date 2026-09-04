@@ -106,19 +106,21 @@ export default function ItineraryView({ itinerary, input }: ItineraryViewProps) 
         {itinerary.budgetBreakdown.length > 0 && (
           <section>
             <h3>{t('itinerary.budgetBreakdown')}</h3>
-            <table className="budget-table">
-              <tbody>
-                {itinerary.budgetBreakdown.map((b, i) => (
-                  <tr key={i}>
-                    <td>{b.category}</td>
-                    <td>
-                      {b.amount.toLocaleString()} {input.currency}
-                    </td>
-                    <td className="budget-note">{b.note}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="table-scroll">
+              <table className="budget-table">
+                <tbody>
+                  {itinerary.budgetBreakdown.map((b, i) => (
+                    <tr key={i}>
+                      <td>{b.category}</td>
+                      <td>
+                        {b.amount.toLocaleString()} {input.currency}
+                      </td>
+                      <td className="budget-note">{b.note}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </section>
         )}
 
