@@ -1,5 +1,12 @@
 import type { SupportedLanguage } from '../store/settingsStore'
-import type { AccessibilityNeed, BudgetItem, Itinerary, TripInput } from '../types/itinerary'
+import type {
+  AccessibilityNeed,
+  BudgetItem,
+  DailyPlan,
+  EquipmentCategory,
+  Itinerary,
+  TripInput,
+} from '../types/itinerary'
 
 const LANGUAGE_NAMES: Record<SupportedLanguage, string> = {
   zh: 'Simplified Chinese (简体中文)',
@@ -176,11 +183,11 @@ export function parseItineraryResponse(raw: string, fallbackDestination: string)
     highlights: Array.isArray(obj.highlights) ? obj.highlights : [],
     route: Array.isArray(obj.route) ? obj.route : [],
     transportPlan: obj.transportPlan!,
-    dailyPlans: obj.dailyPlans,
+    dailyPlans: normalizeDailyPlans(obj.dailyPlans),
     budgetBreakdown: normalizeBudgetBreakdown(obj.budgetBreakdown!),
     mustEatFood: obj.mustEatFood!,
     pitfallWarnings: obj.pitfallWarnings!,
-    equipment: Array.isArray(obj.equipment) ? obj.equipment : [],
+    equipment: Array.isArray(obj.equipment) ? normalizeEquipment(obj.equipment) : [],
     tips: Array.isArray(obj.tips) ? obj.tips : [],
   }
 }
@@ -265,6 +272,29 @@ function normalizeBudgetBreakdown(items: BudgetItem[]): BudgetItem[] {
     const amount = typeof item.amount === 'number' ? item.amount : Number(item.amount)
     return { ...item, amount: Number.isFinite(amount) ? amount : 0 }
   })
+}
+
+/**
+ * Some providers omit a dailyPlans entry's "activities" array (or emit `null`) when a day has
+ * little planned, despite the schema requiring it. Left as-is, `ItineraryView` crashes on
+ * `plan.activities.map(...)` — so every entry's "activities" is normalized to an array here.
+ */
+function normalizeDailyPlans(dailyPlans: DailyPlan[]): DailyPlan[] {
+  return dailyPlans.map((plan) => ({
+    ...plan,
+    activities: Array.isArray(plan.activities) ? plan.activities : [],
+  }))
+}
+
+/**
+ * Some providers omit an equipment category's "items" array. Left as-is, `ItineraryView` crashes
+ * on `cat.items.map(...)` — so every category's "items" is normalized to an array here.
+ */
+function normalizeEquipment(equipment: EquipmentCategory[]): EquipmentCategory[] {
+  return equipment.map((cat) => ({
+    ...cat,
+    items: Array.isArray(cat.items) ? cat.items : [],
+  }))
 }
 
 function extractJson(raw: string): string {

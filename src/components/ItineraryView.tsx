@@ -165,7 +165,7 @@ export default function ItineraryView({
                 {t('itinerary.day', { n: plan.day })} · {plan.title}
               </h4>
               <ul className="activity-list">
-                {plan.activities.map((a, i) => (
+                {(plan.activities ?? []).map((a, i) => (
                   <li key={i}>
                     <span className="activity-time">{a.time}</span>
                     <div>
@@ -274,7 +274,7 @@ export default function ItineraryView({
                 <div className="equipment-card" key={i}>
                   <h4>{cat.category}</h4>
                   <ul>
-                    {cat.items.map((item, j) => (
+                    {(cat.items ?? []).map((item, j) => (
                       <li key={j}>{item}</li>
                     ))}
                   </ul>

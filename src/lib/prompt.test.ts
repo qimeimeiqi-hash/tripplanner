@@ -100,6 +100,33 @@ describe('parseItineraryResponse', () => {
     expect(result.summary).toBe('')
   })
 
+  it('defaults a dailyPlans entry missing "activities" to an empty array instead of leaving it undefined', () => {
+    const withMissingActivities = {
+      ...validItineraryJson,
+      dailyPlans: [{ day: 1, title: 'Arrival' }],
+    }
+    const result = parseItineraryResponse(JSON.stringify(withMissingActivities), '巴黎')
+    expect(result.dailyPlans).toEqual([{ day: 1, title: 'Arrival', activities: [] }])
+  })
+
+  it('defaults a dailyPlans entry whose "activities" is not an array to an empty array', () => {
+    const withNullActivities = {
+      ...validItineraryJson,
+      dailyPlans: [{ day: 1, title: 'Arrival', activities: null }],
+    }
+    const result = parseItineraryResponse(JSON.stringify(withNullActivities), '巴黎')
+    expect(result.dailyPlans).toEqual([{ day: 1, title: 'Arrival', activities: [] }])
+  })
+
+  it('defaults an equipment category missing "items" to an empty array instead of leaving it undefined', () => {
+    const withMissingItems = {
+      ...validItineraryJson,
+      equipment: [{ category: 'Clothing' }],
+    }
+    const result = parseItineraryResponse(JSON.stringify(withMissingItems), '巴黎')
+    expect(result.equipment).toEqual([{ category: 'Clothing', items: [] }])
+  })
+
   it('throws AI_RESPONSE_NOT_JSON when the response is not parseable as JSON', () => {
     expect(() => parseItineraryResponse('this is not json at all', 'Paris')).toThrow(
       'AI_RESPONSE_NOT_JSON',
