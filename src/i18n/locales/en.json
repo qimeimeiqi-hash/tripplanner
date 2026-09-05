@@ -92,11 +92,12 @@
     "equipment": "Packing Checklist",
     "tips": "Travel Tips",
     "exportPdf": "Export PDF",
+    "exporting": "Exporting…",
     "saveToHistory": "Automatically saved to history",
     "regenerate": "Regenerate",
     "tweakTitle": "Adjust to Your Liking",
     "tweakPlaceholder": "e.g. Swap day 2's museum for a park",
-    "tweakSubmit": "Apply Change",
+    "tweakSubmit": "Modify",
     "tweaking": "Almost there, just a moment…"
   },
   "settings": {

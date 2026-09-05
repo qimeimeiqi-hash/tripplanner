@@ -30,10 +30,16 @@ export default function ItineraryView({
   const { t } = useTranslation()
   const exportRef = useRef<HTMLDivElement>(null)
   const [tweakInput, setTweakInput] = useState('')
+  const [isExporting, setIsExporting] = useState(false)
 
   async function handleExport() {
-    if (!exportRef.current) return
-    await exportElementToPdf(exportRef.current, `${itinerary.destination}-itinerary.pdf`)
+    if (!exportRef.current || isExporting) return
+    setIsExporting(true)
+    try {
+      await exportElementToPdf(exportRef.current, `${itinerary.destination}-itinerary.pdf`)
+    } finally {
+      setIsExporting(false)
+    }
   }
 
   function handleTweakSubmit(e: React.FormEvent) {
@@ -51,8 +57,9 @@ export default function ItineraryView({
   return (
     <div className="itinerary-view">
       <div className="itinerary-actions">
-        <button type="button" className="secondary-btn" onClick={handleExport}>
-          {t('itinerary.exportPdf')}
+        <button type="button" className="secondary-btn" onClick={handleExport} disabled={isExporting}>
+          {isExporting && <span className="spinner" aria-hidden="true" />}
+          {isExporting ? t('itinerary.exporting') : t('itinerary.exportPdf')}
         </button>
       </div>
 

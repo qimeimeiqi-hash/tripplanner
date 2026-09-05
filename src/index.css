@@ -14,6 +14,7 @@
   --warning: #a5690a;
   --warning-bg: rgba(210, 140, 10, 0.1);
   --shadow: rgba(90, 80, 40, 0.1) 0 4px 16px -4px;
+  --btn-shadow: rgba(90, 80, 40, 0.14) 0 1px 3px 0;
 
   --sans: system-ui, 'Segoe UI', 'Hiragino Sans', 'Noto Sans JP', 'PingFang SC', Roboto, sans-serif;
 
@@ -44,6 +45,7 @@
     --warning: #ffc266;
     --warning-bg: rgba(255, 194, 102, 0.14);
     --shadow: rgba(0, 0, 0, 0.4) 0 4px 16px -4px;
+    --btn-shadow: rgba(0, 0, 0, 0.45) 0 1px 3px 0;
   }
 }
 
