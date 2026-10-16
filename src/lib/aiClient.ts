@@ -13,8 +13,8 @@ export interface AiCallParams {
 export class AiCallError extends Error {}
 
 const TRANSIENT_STATUS_CODES = new Set([408, 429, 500, 502, 503, 504, 529])
-const MAX_ATTEMPTS = 3
-const BASE_DELAY_MS = 2000
+const MAX_ATTEMPTS = 5
+const BASE_DELAY_MS = 3000
 
 export async function callAi({
   baseUrl,

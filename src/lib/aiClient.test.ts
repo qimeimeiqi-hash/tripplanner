@@ -96,28 +96,52 @@ describe('callAi', () => {
     const promise = callAi({ ...baseParams, flavor: 'openai-compatible', onRetry })
 
     // Let the first attempt run, then fast-forward through both backoff delays.
-    await vi.advanceTimersByTimeAsync(2000)
-    await vi.advanceTimersByTimeAsync(4000)
+    await vi.advanceTimersByTimeAsync(3000)
+    await vi.advanceTimersByTimeAsync(6000)
 
     await expect(promise).resolves.toBe('done')
     expect(fetch).toHaveBeenCalledTimes(3)
-    expect(onRetry).toHaveBeenNthCalledWith(1, 1, 3, 2000)
-    expect(onRetry).toHaveBeenNthCalledWith(2, 2, 3, 4000)
+    expect(onRetry).toHaveBeenNthCalledWith(1, 1, 5, 3000)
+    expect(onRetry).toHaveBeenNthCalledWith(2, 2, 5, 6000)
   })
 
-  it('gives up after exhausting all retry attempts on persistent 503s', async () => {
-    vi.mocked(fetch).mockResolvedValue(jsonResponse(503, { error: 'overloaded' }))
+  it('waits the full backoff delay before retrying, not a millisecond less', async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce(jsonResponse(503, { error: 'overloaded' }))
+      .mockResolvedValueOnce(jsonResponse(200, { choices: [{ message: { content: 'done' } }] }))
 
     const promise = callAi({ ...baseParams, flavor: 'openai-compatible' })
+
+    await vi.advanceTimersByTimeAsync(2999)
+    expect(fetch).toHaveBeenCalledTimes(1)
+
+    await vi.advanceTimersByTimeAsync(1)
+    await expect(promise).resolves.toBe('done')
+    expect(fetch).toHaveBeenCalledTimes(2)
+  })
+
+  it('gives up after 5 attempts on persistent 503s, doubling the delay each time (3s, 6s, 12s, 24s)', async () => {
+    vi.mocked(fetch).mockResolvedValue(jsonResponse(503, { error: 'overloaded' }))
+
+    const onRetry = vi.fn()
+    const promise = callAi({ ...baseParams, flavor: 'openai-compatible', onRetry })
     // Swallow the eventual rejection so it doesn't register as an unhandled rejection
-    // while we advance fake timers past both retry delays below.
+    // while we advance fake timers past all the retry delays below.
     promise.catch(() => {})
 
-    await vi.advanceTimersByTimeAsync(2000)
-    await vi.advanceTimersByTimeAsync(4000)
+    await vi.advanceTimersByTimeAsync(3000)
+    await vi.advanceTimersByTimeAsync(6000)
+    await vi.advanceTimersByTimeAsync(12000)
+    await vi.advanceTimersByTimeAsync(24000)
 
     await expect(promise).rejects.toThrow(/^HTTP_503:/)
-    expect(fetch).toHaveBeenCalledTimes(3)
+    expect(fetch).toHaveBeenCalledTimes(5)
+    expect(onRetry.mock.calls).toEqual([
+      [1, 5, 3000],
+      [2, 5, 6000],
+      [3, 5, 12000],
+      [4, 5, 24000],
+    ])
   })
 
   it('does not retry AiCallError instances that carry no HTTP status (e.g. EMPTY_RESPONSE)', async () => {

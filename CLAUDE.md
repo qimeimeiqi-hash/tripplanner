@@ -90,8 +90,8 @@ usually just adding a preset entry — it does not need new request-building cod
 different wire format would need a third flavor and a new branch in `src/lib/aiClient.ts`.
 
 `aiClient.ts`'s `callAi()` retries transient failures (HTTP 408/429/500/502/503/504/529 — e.g.
-Gemini's frequent free-tier 503 "model overloaded") up to 3 attempts with exponential backoff
-(2s, 4s), reporting progress through an `onRetry(attempt, maxAttempts, delayMs)` callback that
+Gemini's frequent free-tier 503 "model overloaded") up to 5 attempts with exponential backoff
+(3s, 6s, 12s, 24s — ~45s of waiting in total, long enough to ride out a typical overload spike), reporting progress through an `onRetry(attempt, maxAttempts, delayMs)` callback that
 `App.tsx` surfaces in the UI. Non-transient errors (401, 404, etc.) are not retried.
 
 ### Generation data flow
